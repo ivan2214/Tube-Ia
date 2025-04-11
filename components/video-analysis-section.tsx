@@ -10,7 +10,7 @@ import { MessageSquare, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function VideoAnalysisSection() {
-  const { videoId, timelines } = useVideoStore();
+  const { videoId, timelines, videoTitle } = useVideoStore();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,6 +37,7 @@ export default function VideoAnalysisSection() {
 
   return (
     <div className="relative">
+      <h2 className="mb-4 font-bold text-xl">{videoTitle}</h2>
       <div className="grid gap-6 md:grid-cols-2">
         <YouTubePlayer
           videoId={videoId}

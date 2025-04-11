@@ -17,7 +17,8 @@ export default function VideoForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setVideoId, setTimelines, setTranscript } = useVideoStore();
+  const { setVideoId, setTimelines, setTranscript, setVideoTitle } =
+    useVideoStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +26,12 @@ export default function VideoForm() {
     setIsLoading(true);
 
     try {
-      const { object, videoId, transcript } = await processVideo(url);
+      const { object, videoId, transcript, videoTitle } = await processVideo(
+        url
+      );
       setVideoId(videoId);
       setTranscript(transcript);
+      setVideoTitle(videoTitle || "YouTube Video");
 
       // Reset timeline before streaming new results
       setTimelines([]);

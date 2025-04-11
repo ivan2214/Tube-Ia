@@ -13,7 +13,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { formatTime } from "@/utils/format-time";
 
 interface TimelineProps {
   entries: TimelineEntry[];
@@ -32,16 +31,24 @@ export default function Timeline({
     return null;
   }
 
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
   // Sort entries by timestamp
   const sortedEntries = [...entries].sort((a, b) => a.timestamp - b.timestamp);
 
   // Find the current section based on currentTime
   const currentSection = sortedEntries.reduce(
-    (prev, current) => {
-      if (
-        current.timestamp <= currentTime &&
-        current.timestamp > prev.timestamp
-      ) {
+    (prev, current, index, array) => {
+      // Check if current time is between this timestamp and the next one
+      const nextTimestamp =
+        index < array.length - 1
+          ? array[index + 1].timestamp
+          : Number.POSITIVE_INFINITY;
+      if (current.timestamp <= currentTime && currentTime < nextTimestamp) {
         return current;
       }
       return prev;
@@ -90,7 +97,10 @@ export default function Timeline({
                 </div>
 
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value={`item-${entry.timestamp}`}>
+                  <AccordionItem
+                    value={`item-${entry.timestamp}`}
+                    className="border-none"
+                  >
                     <AccordionTrigger
                       className={
                         isCurrentSection ? "font-medium text-primary" : ""
