@@ -1,10 +1,10 @@
 "use server";
 
-import { videoSchema, timelineSchema } from "@/entities/video/schemas/video";
+import { timelineSchema, videoSchema } from "@/entities/video/schemas/video";
 import {
-  extractVideoId,
-  getVideoTitle,
-  getVideoTranscript,
+	extractVideoId,
+	getVideoTitle,
+	getVideoTranscript,
 } from "@/entities/video/utils/video-utils";
 import { google } from "@ai-sdk/google";
 import { streamObject } from "ai";
@@ -19,35 +19,35 @@ Tus respuestas deben ser en español. Siempre responde usando el formato JSON es
 `;
 
 export async function processVideo(url: string) {
-  // Validate the URL
-  const { url: validatedUrl } = videoSchema.parse({ url });
+	// Validate the URL
+	const { url: validatedUrl } = videoSchema.parse({ url });
 
-  // Extract video ID
-  const videoId = extractVideoId(validatedUrl);
-  if (!videoId) {
-    throw new Error("Could not extract video ID from URL");
-  }
+	// Extract video ID
+	const videoId = extractVideoId(validatedUrl);
+	if (!videoId) {
+		throw new Error("Could not extract video ID from URL");
+	}
 
-  const stream = createStreamableValue();
+	const stream = createStreamableValue();
 
-  // Fetch transcript and video title
-  let transcript: string;
-  let videoTitle: string | null = null;
+	// Fetch transcript and video title
+	let transcript: string;
+	let videoTitle: string | null = null;
 
-  try {
-    transcript = await getVideoTranscript(videoId);
-    videoTitle = await getVideoTitle(videoId);
-  } catch (error) {
-    throw new Error(
-      `Failed to process video: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  }
-  // Create a promise to handle the async processing
-  (async () => {
-    try {
-      const userPrompt = `
+	try {
+		transcript = await getVideoTranscript(videoId);
+		videoTitle = await getVideoTitle(videoId);
+	} catch (error) {
+		throw new Error(
+			`Failed to process video: ${
+				error instanceof Error ? error.message : "Unknown error"
+			}`,
+		);
+	}
+	// Create a promise to handle the async processing
+	(async () => {
+		try {
+			const userPrompt = `
 A continuación te proporciono la transcripción de un video de YouTube, con marcas de tiempo.
 
 Identifica los cambios significativos de tema a lo largo del video y genera una línea de tiempo detallada. Para cada sección importante, proporciona:
@@ -83,33 +83,33 @@ Aquí está la transcripción:
 ${transcript}
 `;
 
-      // Use AI to analyze transcript and generate timeline
-      const { partialObjectStream } = streamObject({
-        model: gemini,
-        schema: timelineSchema,
-        system: systemPrompt,
-        prompt: userPrompt,
-        schemaDescription:
-          "Un arreglo de objetos que contiene propiedades de marca de tiempo (timestamp), tema (topic) y descripción detallada (description)",
-      });
+			// Use AI to analyze transcript and generate timeline
+			const { partialObjectStream } = streamObject({
+				model: gemini,
+				schema: timelineSchema,
+				system: systemPrompt,
+				prompt: userPrompt,
+				schemaDescription:
+					"Un arreglo de objetos que contiene propiedades de marca de tiempo (timestamp), tema (topic) y descripción detallada (description)",
+			});
 
-      for await (const partialObject of partialObjectStream) {
-        stream.update(partialObject);
-      }
+			for await (const partialObject of partialObjectStream) {
+				stream.update(partialObject);
+			}
 
-      stream.done();
-    } catch (error) {
-      console.error("Error in processVideo:", error);
-      stream.error(
-        error instanceof Error ? error : new Error("Unknown error occurred")
-      );
-    }
-  })();
+			stream.done();
+		} catch (error) {
+			console.error("Error in processVideo:", error);
+			stream.error(
+				error instanceof Error ? error : new Error("Unknown error occurred"),
+			);
+		}
+	})();
 
-  return {
-    object: stream.value,
-    videoId,
-    transcript,
-    videoTitle,
-  };
+	return {
+		object: stream.value,
+		videoId,
+		transcript,
+		videoTitle,
+	};
 }

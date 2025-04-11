@@ -7,45 +7,45 @@ import { Toaster } from "@/shared/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+	variable: "--font-geist-sans",
+	subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+	variable: "--font-geist-mono",
+	subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "YouTube Video Timeline Generator",
-  description: "Generate a timeline of topics discussed in YouTube videos",
+	title: "YouTube Video Timeline Generator",
+	description: "Generate a timeline of topics discussed in YouTube videos",
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="es" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <main className="@container flex min-h-screen flex-col">
-              <Navbar />
-              <section className="flex-1">{children}</section>
-              <Toaster />
-            </main>
-          </AuthProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="es" suppressHydrationWarning>
+			<body
+				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+			>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<AuthProvider>
+						<main className="@container flex min-h-screen flex-col">
+							<Navbar />
+							<section className="flex-1">{children}</section>
+							<Toaster />
+						</main>
+					</AuthProvider>
+				</ThemeProvider>
+			</body>
+		</html>
+	);
 }

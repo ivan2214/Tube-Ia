@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -21,6 +21,7 @@ export default function YouTubePlayer({
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load YouTube API
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     // Only load the API once
     if (!document.getElementById("youtube-api-script")) {
