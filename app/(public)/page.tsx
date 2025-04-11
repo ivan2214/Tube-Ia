@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import type { TimelineEntry } from "@/schemas/video";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { readStreamableValue } from "ai/rsc";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 export const maxDuration = 30;
@@ -18,6 +18,8 @@ export default function Home() {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [second, setSecond] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,12 @@ export default function Home() {
 
       for await (const partialObject of readStreamableValue(object)) {
         if (partialObject) {
+          // hacer scroll al ultimo recibido automaticamente que sera el que mas abajo este :
+
+          if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+          }
+
           setTimelines(partialObject);
         }
       }
@@ -42,6 +50,10 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSecondChange = (second: number) => {
+    setSecond(second);
   };
 
   return (
@@ -92,7 +104,7 @@ export default function Home() {
       </Card>
 
       {videoId && timeLines && timeLines.length > 0 && (
-        <>
+        <section className="grid gap-4 md:grid-cols-2">
           <div className="mb-6 aspect-video">
             <iframe
               width="100%"
@@ -104,8 +116,13 @@ export default function Home() {
               className="rounded-lg"
             />
           </div>
-          <Timeline entries={timeLines} videoId={videoId} />
-        </>
+          <Timeline
+            containerRef={containerRef}
+            videoId={videoId}
+            handleSecondChange={handleSecondChange}
+            entries={timeLines}
+          />
+        </section>
       )}
 
       {isLoading && (

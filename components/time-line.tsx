@@ -1,15 +1,28 @@
+"use client";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import type { TimelineEntry } from "@/schemas/video";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface TimelineProps {
   entries: TimelineEntry[];
   videoId: string;
+  handleSecondChange: (seconds: number) => void;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function Timeline({ entries, videoId }: TimelineProps) {
+export default function Timeline({
+  entries,
+  videoId,
+  containerRef,
+}: TimelineProps) {
   if (!entries || entries.length === 0) {
     return null;
   }
@@ -36,7 +49,7 @@ export default function Timeline({ entries, videoId }: TimelineProps) {
     <Card className="p-6">
       <h2 className="mb-4 font-bold text-xl">Video Timeline</h2>
       <ScrollArea className="h-[500px] pr-4">
-        <div className="space-y-6">
+        <div ref={containerRef} className="space-y-6">
           {entries.map((entry) => (
             <div
               key={entry.timestamp}
@@ -45,7 +58,8 @@ export default function Timeline({ entries, videoId }: TimelineProps) {
               <div className="-left-[7px] absolute top-1 h-3 w-3 rounded-full bg-primary" />
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="font-mono">
-                  {formatTime(entry.timestamp)}
+                  {/* {formatTime(entry.timestamp)} */}
+                  {entry.timestamp}
                 </Badge>
                 <a
                   href={createYouTubeLink(videoId, entry.timestamp)}
@@ -56,7 +70,13 @@ export default function Timeline({ entries, videoId }: TimelineProps) {
                   <ExternalLink className="ml-1 h-3 w-3" />
                 </a>
               </div>
-              <p className="mt-2">{entry.topic}</p>
+
+              <Accordion type="single" collapsible>
+                <AccordionItem value={entry.topic}>
+                  <AccordionTrigger>{entry.topic}</AccordionTrigger>
+                  <AccordionContent>{entry.description}</AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           ))}
         </div>

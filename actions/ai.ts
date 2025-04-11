@@ -81,6 +81,7 @@ export async function processVideo(url: string) {
           For each significant topic or section change in the video, provide:
           1. The timestamp in seconds when the topic begins
           2. A brief description of the topic being discussed
+          3. A brief description of what the topic will cover
           
           Format your response as an array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties.
           
@@ -89,8 +90,9 @@ export async function processVideo(url: string) {
           
           Example output format:
           [
-            { "timestamp": 0, "topic": "Introduction to the video" },
-            { "timestamp": 120, "topic": "First main concept explained" }
+            { "timestamp": 0, "topic": "Introduction to the video", "description": "Brief introduction to the video"  },
+            { "timestamp": 120, "topic": "First main concept explained", "description": "Explanation of the first main concept" },
+            // ... other sections
           ]
           
           Identify at least 5-10 key sections in the video. Convert any timestamp format (like MM:SS) to seconds.

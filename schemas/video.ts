@@ -18,6 +18,7 @@ export const videoSchema = z.object({
 export interface TimelineEntry {
   timestamp: number;
   topic: string;
+  description: string;
 }
 
 // Schema for timeline entries
@@ -28,6 +29,9 @@ export const timelineEntrySchema = z.object({
   topic: z
     .string()
     .describe("A brief description of the topic being discussed"),
+  description: z
+    .string()
+    .describe("A detailed description of the topic, if necessary"),
 });
 
 // Schema for the complete timeline
