@@ -8,6 +8,7 @@ import {
 import { google } from "@ai-sdk/google";
 import { streamObject } from "ai";
 import { createStreamableValue } from "ai/rsc";
+import { YoutubeTranscript } from "youtube-transcript";
 
 import { cookies } from "next/headers";
 
@@ -21,10 +22,36 @@ function extractVideoId(url: string): string | null {
   return match ? match[1] : null;
 }
 
+// Fetch YouTube transcript
+async function getVideoTranscript(videoId: string): Promise<string> {
+  try {
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+
+    if (!transcript || transcript.length === 0) {
+      throw new Error("No transcript available for this video");
+    }
+
+    // Format transcript with timestamps
+    return transcript
+      .map((item) => `[${formatTime(item.offset / 1000)}] ${item.text}`)
+      .join("\n");
+  } catch (error) {
+    console.error("Error fetching transcript:", error);
+    throw new Error(
+      "Failed to fetch video transcript. The video may not have captions available."
+    );
+  }
+}
+
+// Format seconds to MM:SS
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
 export async function processVideo(url: string) {
   "use server";
-
-  const stream = createStreamableValue();
 
   // Validate the URL
   const { url: validatedUrl } = videoSchema.parse({ url });
@@ -35,43 +62,60 @@ export async function processVideo(url: string) {
     throw new Error("Could not extract video ID from URL");
   }
 
+  const stream = createStreamableValue();
+
+  // Create a promise to handle the async processing
   (async () => {
-    const { partialObjectStream } = streamObject({
-      model: gemini,
-      schema: timelineSchema,
-      prompt: `
-				You are a video content analyzer. Given the YouTube video ID: ${videoId}, 
-				create a timeline of topics discussed in the video. 
-				
-				For each significant topic or section change in the video, provide:
-				1. The timestamp in seconds when the topic begins
-				2. A brief description of the topic being discussed
-				
-				Format your response as an array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties.
-				
-				Example:
-				[
-					{ "timestamp": 0, "topic": "Introduction to the video" },
-					{ "timestamp": 120, "topic": "First main concept explained" }
-				]
-				
-				Try to identify at least 5-10 key sections in the video.
+    try {
+      // Fetch video transcript
+      const transcript = await getVideoTranscript(videoId);
 
-				Responder en español siempre
-			`,
-      schemaDescription:
-        "An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
-    });
+      // Use AI to analyze transcript and generate timeline
+      const { partialObjectStream } = streamObject({
+        model: gemini,
+        schema: timelineSchema,
+        prompt: `
+          You are a video content analyzer. I'll provide you with a YouTube video transcript with timestamps.
+          Create a timeline of topics discussed in the video based on this transcript.
+          
+          For each significant topic or section change in the video, provide:
+          1. The timestamp in seconds when the topic begins
+          2. A brief description of the topic being discussed
+          
+          Format your response as an array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties.
+          
+          Here's the transcript:
+          ${transcript}
+          
+          Example output format:
+          [
+            { "timestamp": 0, "topic": "Introduction to the video" },
+            { "timestamp": 120, "topic": "First main concept explained" }
+          ]
+          
+          Identify at least 5-10 key sections in the video. Convert any timestamp format (like MM:SS) to seconds.
+          Ensure the return always in spanish.
+        `,
+        schemaDescription:
+          "An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
+      });
 
-    for await (const partialObject of partialObjectStream) {
-      stream.update(partialObject);
-      console.log(partialObject);
+      for await (const partialObject of partialObjectStream) {
+        stream.update(partialObject);
+      }
+
+      stream.done();
+    } catch (error) {
+      console.error("Error in processVideo:", error);
+      stream.error(
+        error instanceof Error ? error : new Error("Unknown error occurred")
+      );
     }
-    stream.done();
   })();
 
   return {
     object: stream.value,
+    videoId,
   };
 }
 

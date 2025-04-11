@@ -5,16 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { TimelineEntry } from "@/schemas/video";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { readStreamableValue } from "ai/rsc";
 import { useState } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export const maxDuration = 30;
 
 export default function Home() {
   const [timeLines, setTimelines] = useState<TimelineEntry[] | null>(null);
-  const [url, setUrl] = useState(
-    "https://www.youtube.com/watch?v=pJd36C88vbQ&t=4s"
-  );
+  const [url, setUrl] = useState("");
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { object, videoId } = await processVideo(url);
+      setVideoId(videoId);
+
+      // Reset timeline before streaming new results
+      setTimelines([]);
+
+      for await (const partialObject of readStreamableValue(object)) {
+        if (partialObject) {
+          setTimelines(partialObject);
+        }
+      }
+    } catch (err) {
+      console.error("Error processing video:", err);
+      setError(err instanceof Error ? err.message : "Failed to process video");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-10">
@@ -27,21 +55,7 @@ export default function Home() {
       </p>
 
       <Card className="mb-8 p-6">
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const { object } = await processVideo(url);
-
-            for await (const partialObject of readStreamableValue(object)) {
-              console.log(partialObject);
-
-              if (partialObject) {
-                setTimelines(partialObject);
-              }
-            }
-          }}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="url" className="font-medium text-sm">
               YouTube Video URL
@@ -52,17 +66,57 @@ export default function Home() {
               placeholder="https://www.youtube.com/watch?v=..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              disabled={isLoading}
               className="w-full"
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Generate Timeline
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Generate Timeline"
+            )}
           </Button>
         </form>
       </Card>
-      {timeLines && timeLines?.length > 0 && (
-        <Timeline entries={timeLines} videoId={url} />
+
+      {videoId && timeLines && timeLines.length > 0 && (
+        <>
+          <div className="mb-6 aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${videoId}`}
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="rounded-lg"
+            />
+          </div>
+          <Timeline entries={timeLines} videoId={videoId} />
+        </>
+      )}
+
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-center text-muted-foreground text-sm">
+            Analyzing video content and generating timeline...
+            <br />
+            This may take a minute or two depending on the video length.
+          </p>
+        </div>
       )}
     </div>
   );
