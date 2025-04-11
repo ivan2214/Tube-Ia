@@ -1,61 +1,45 @@
 "use server";
 
-import { type TimelineEntry, videoSchema } from "@/schemas/video";
+import {
+  type TimelineEntry,
+  timelineSchema,
+  videoSchema,
+} from "@/schemas/video";
 import { google } from "@ai-sdk/google";
 import { streamObject } from "ai";
 import { createStreamableValue } from "ai/rsc";
+
 import { cookies } from "next/headers";
 
 const gemini = google("gemini-2.0-flash-001");
 
-import { z } from "zod";
-
-const TimelineItemSchema = z.object({
-	timestamp: z
-		.number()
-		.describe("The timestamp in seconds when the topic begins"),
-	topic: z
-		.string()
-		.describe("A brief description of the topic being discussed"),
-});
-
-const TimelineSchema = z
-	.array(TimelineItemSchema)
-	.describe(
-		"An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
-	);
-
 // Extract YouTube video ID from URL
 function extractVideoId(url: string): string | null {
-	const regex =
-		/(?:youtube\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-	const match = url.match(regex);
-	return match ? match[1] : null;
+  const regex =
+    /(?:youtube\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 }
 
 export async function processVideo(url: string) {
-	"use server";
+  "use server";
 
-	console.log("entre al processVideo");
+  const stream = createStreamableValue();
 
-	const stream = createStreamableValue();
+  // Validate the URL
+  const { url: validatedUrl } = videoSchema.parse({ url });
 
-	// Validate the URL
-	const { url: validatedUrl } = videoSchema.parse({ url });
+  // Extract video ID
+  const videoId = extractVideoId(validatedUrl);
+  if (!videoId) {
+    throw new Error("Could not extract video ID from URL");
+  }
 
-	console.log(validatedUrl);
-
-	// Extract video ID
-	const videoId = extractVideoId(validatedUrl);
-	if (!videoId) {
-		throw new Error("Could not extract video ID from URL");
-	}
-
-	(async () => {
-		const { partialObjectStream } = streamObject({
-			model: gemini,
-			schema: TimelineSchema,
-			prompt: `
+  (async () => {
+    const { partialObjectStream } = streamObject({
+      model: gemini,
+      schema: timelineSchema,
+      prompt: `
 				You are a video content analyzer. Given the YouTube video ID: ${videoId}, 
 				create a timeline of topics discussed in the video. 
 				
@@ -72,44 +56,46 @@ export async function processVideo(url: string) {
 				]
 				
 				Try to identify at least 5-10 key sections in the video.
+
+				Responder en español siempre
 			`,
-			schemaDescription:
-				"An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
-		});
+      schemaDescription:
+        "An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
+    });
 
-		for await (const partialObject of partialObjectStream) {
-			stream.update(partialObject);
-			console.log(partialObject);
-		}
-		stream.done();
-	})();
+    for await (const partialObject of partialObjectStream) {
+      stream.update(partialObject);
+      console.log(partialObject);
+    }
+    stream.done();
+  })();
 
-	return {
-		object: stream.value,
-	};
+  return {
+    object: stream.value,
+  };
 }
 
 export async function getTimelineResults(): Promise<{
-	entries: TimelineEntry[];
-	videoId: string | null;
+  entries: TimelineEntry[];
+  videoId: string | null;
 }> {
-	const timelineCookie = (await cookies()).get("timeline");
-	const videoIdCookie = (await cookies()).get("currentVideoId");
+  const timelineCookie = (await cookies()).get("timeline");
+  const videoIdCookie = (await cookies()).get("currentVideoId");
 
-	let entries: TimelineEntry[] = [];
-	let videoId: string | null = null;
+  let entries: TimelineEntry[] = [];
+  let videoId: string | null = null;
 
-	if (timelineCookie?.value) {
-		try {
-			entries = JSON.parse(timelineCookie.value);
-		} catch (e) {
-			console.error("Error parsing timeline cookie:", e);
-		}
-	}
+  if (timelineCookie?.value) {
+    try {
+      entries = JSON.parse(timelineCookie.value);
+    } catch (e) {
+      console.error("Error parsing timeline cookie:", e);
+    }
+  }
 
-	if (videoIdCookie?.value) {
-		videoId = videoIdCookie.value;
-	}
+  if (videoIdCookie?.value) {
+    videoId = videoIdCookie.value;
+  }
 
-	return { entries, videoId };
+  return { entries, videoId };
 }
