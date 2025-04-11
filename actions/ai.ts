@@ -1,16 +1,11 @@
 "use server";
 
-import {
-  type TimelineEntry,
-  timelineSchema,
-  videoSchema,
-} from "@/schemas/video";
 import { google } from "@ai-sdk/google";
-import { streamObject } from "ai";
+import { streamObject, streamText } from "ai";
 import { createStreamableValue } from "ai/rsc";
 import { YoutubeTranscript } from "youtube-transcript";
-
-import { cookies } from "next/headers";
+import { videoSchema, timelineSchema } from "@/schemas/video";
+import { formatTime } from "@/utils/format-time";
 
 const gemini = google("gemini-2.0-flash-001");
 
@@ -22,10 +17,12 @@ function extractVideoId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Fetch YouTube transcript
+// Fetch YouTube transcript with chunking for longer videos
 async function getVideoTranscript(videoId: string): Promise<string> {
   try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+      lang: "es",
+    });
 
     if (!transcript || transcript.length === 0) {
       throw new Error("No transcript available for this video");
@@ -43,16 +40,7 @@ async function getVideoTranscript(videoId: string): Promise<string> {
   }
 }
 
-// Format seconds to MM:SS
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
-
 export async function processVideo(url: string) {
-  "use server";
-
   // Validate the URL
   const { url: validatedUrl } = videoSchema.parse({ url });
 
@@ -64,42 +52,62 @@ export async function processVideo(url: string) {
 
   const stream = createStreamableValue();
 
+  // Fetch transcript first
+  let transcript: string;
+  try {
+    transcript = await getVideoTranscript(videoId);
+  } catch (error) {
+    throw new Error(
+      `Failed to process video: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
   // Create a promise to handle the async processing
   (async () => {
     try {
-      // Fetch video transcript
-      const transcript = await getVideoTranscript(videoId);
-
       // Use AI to analyze transcript and generate timeline
       const { partialObjectStream } = streamObject({
         model: gemini,
         schema: timelineSchema,
         prompt: `
           You are a video content analyzer. I'll provide you with a YouTube video transcript with timestamps.
-          Create a timeline of topics discussed in the video based on this transcript.
+          Create a comprehensive timeline of topics discussed in the video based on this transcript.
           
           For each significant topic or section change in the video, provide:
           1. The timestamp in seconds when the topic begins
           2. A brief description of the topic being discussed
-          3. A brief description of what the topic will cover
+          3. A detailed description of what the topic covers
           
-          Format your response as an array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties.
+          Format your response as an array of objects, each with:
+          - 'timestamp' (number in seconds)
+          - 'topic' (string, a brief title)
+          - 'description' (string, a detailed explanation)
           
           Here's the transcript:
           ${transcript}
           
           Example output format:
           [
-            { "timestamp": 0, "topic": "Introduction to the video", "description": "Brief introduction to the video"  },
-            { "timestamp": 120, "topic": "First main concept explained", "description": "Explanation of the first main concept" },
-            // ... other sections
+            { 
+              "timestamp": 0, 
+              "topic": "Introduction to the video", 
+              "description": "The speaker introduces themselves and provides an overview of what will be covered in the video."
+            },
+            { 
+              "timestamp": 120, 
+              "topic": "First main concept", 
+              "description": "Detailed explanation of the first concept, including key points and examples."
+            }
           ]
           
           Identify at least 5-10 key sections in the video. Convert any timestamp format (like MM:SS) to seconds.
-          Ensure the return always in spanish.
+          For longer videos (over 30 minutes), identify more sections to provide a comprehensive overview.
+          Ensure you capture the main topics throughout the entire video, not just the beginning.
+          Always provide your responses in Spanish.
         `,
         schemaDescription:
-          "An array of objects, each with 'timestamp' (number in seconds) and 'topic' (string) properties",
+          "An array of objects with timestamp, topic, and description properties",
       });
 
       for await (const partialObject of partialObjectStream) {
@@ -118,30 +126,94 @@ export async function processVideo(url: string) {
   return {
     object: stream.value,
     videoId,
+    transcript,
   };
 }
 
-export async function getTimelineResults(): Promise<{
-  entries: TimelineEntry[];
-  videoId: string | null;
-}> {
-  const timelineCookie = (await cookies()).get("timeline");
-  const videoIdCookie = (await cookies()).get("currentVideoId");
+export async function chatWithVideo(
+  message: string,
+  videoId: string,
+  transcript: string
+) {
+  const stream = createStreamableValue<string>();
 
-  let entries: TimelineEntry[] = [];
-  let videoId: string | null = null;
+  // Process transcript in chunks if it's too long
+  const maxChunkSize = 15000;
+  const transcriptChunks = [];
 
-  if (timelineCookie?.value) {
+  // Split transcript into manageable chunks
+  for (let i = 0; i < transcript.length; i += maxChunkSize) {
+    transcriptChunks.push(transcript.substring(i, i + maxChunkSize));
+  }
+
+  // Get a summary of the full transcript for context
+  let transcriptSummary = "";
+  if (transcriptChunks.length > 1) {
     try {
-      entries = JSON.parse(timelineCookie.value);
-    } catch (e) {
-      console.error("Error parsing timeline cookie:", e);
+      const { text } = await streamText({
+        model: gemini,
+        system: `
+          You are a helpful assistant that summarizes YouTube video transcripts.
+          Your goal is to provide a concise summary of the main points discussed in the video.
+          The summary should be understandable by a general audience and should be no more than 500 words.
+          Avoid unnecessary details or tangential points.
+          Always provide your responses in Spanish.
+        `,
+        prompt: `
+          Summarize the following video transcript in about 500 words. Focus on the main topics and key points:
+          
+          ${transcript.substring(0, 30000)}
+          
+          ${transcript.length > 30000 ? "... (transcript continues)" : ""}
+        `,
+        maxTokens: 1000,
+      });
+
+      transcriptSummary = await text;
+    } catch (error) {
+      console.error("Error generating transcript summary:", error);
+      transcriptSummary = "Error generating summary of the full transcript.";
     }
   }
+  (async () => {
+    try {
+      const { textStream } = streamText({
+        model: gemini,
+        prompt: `
+          You are an AI assistant specialized in discussing and explaining YouTube video content.
+          You have access to the transcript of a video with ID: ${videoId}.
+          Always provide your responses in Spanish.
+          
+          ${
+            transcriptChunks.length > 1
+              ? `This is a longer video. Here's a summary of the full content: ${transcriptSummary}`
+              : ""
+          }
+          
+          The user is asking about this specific video. Provide helpful, accurate, and concise responses
+          based on the video content. If you don't know something or if it's not covered in the transcript,
+          be honest about it.
+          
+          Here's the relevant part of the transcript:
+          ${transcriptChunks[0]}
+          
+          User's message: ${message}
+        `,
+        maxTokens: 1000,
+      });
 
-  if (videoIdCookie?.value) {
-    videoId = videoIdCookie.value;
-  }
+      for await (const chunk of textStream) {
+        stream.update(chunk);
+      }
 
-  return { entries, videoId };
+      stream.done();
+    } catch (error) {
+      console.error("Error in chatWithVideo:", error);
+      stream.error(
+        error instanceof Error ? error : new Error("Unknown error occurred")
+      );
+    }
+  })();
+
+  return { stream: stream.value };
 }
