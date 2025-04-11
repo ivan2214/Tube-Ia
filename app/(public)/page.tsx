@@ -1,5 +1,5 @@
-import VideoForm from "@/components/video-form";
-import VideoAnalysisSection from "@/components/video-analysis-section";
+import VideoForm from "@/entities/video/components/video-form";
+import VideoAnalysisSection from "@/entities/video/components/video-analysis-section";
 
 export default function Home() {
   return (

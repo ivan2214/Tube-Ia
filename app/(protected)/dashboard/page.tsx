@@ -5,10 +5,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
 import Link from "next/link";
-import { getCurrentUser } from "@/hooks/current-user";
+import { getCurrentUser } from "@/entities/user/hooks/current-user";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {

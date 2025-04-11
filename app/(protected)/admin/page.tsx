@@ -7,10 +7,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserTable } from "@/components/admin/user-table";
-import { getCurrentUser } from "@/hooks/current-user";
+} from "@/shared/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/components/ui/tabs";
+import { UserTable } from "@/entities/admin/components/user-table";
+import { getCurrentUser } from "@/entities/user/hooks/current-user";
 
 export default async function AdminPage() {
   const { currentUser } = await getCurrentUser();

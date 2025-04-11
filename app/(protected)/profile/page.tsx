@@ -8,10 +8,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ProfileForm } from "@/components/profile/profile-form";
-import { getCurrentUser } from "@/hooks/current-user";
+} from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { ProfileForm } from "@/entities/user/components/profile-form";
+import { getCurrentUser } from "@/entities/user/hooks/current-user";
 
 export default async function ProfilePage() {
   const { currentUser } = await getCurrentUser();

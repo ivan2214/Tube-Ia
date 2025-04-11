@@ -1,7 +1,7 @@
 import type React from "react";
 import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/hooks/current-user";
+import { getCurrentUser } from "@/entities/user/hooks/current-user";
 
 export default async function ProtectedLayout({
   children,

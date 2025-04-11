@@ -3,8 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/db";
 import authConfig from "@/auth.config";
 import { RoleUser } from "@prisma/client";
-import { getUserById } from "./data/user";
-import { getAccountByUserId } from "./data/accounts";
+import { getUserById } from "./entities/user/data/user";
+import { getAccountByUserId } from "./entities/user/data/accounts";
 
 // Asegurarse de que el secreto esté definido
 if (!process.env.NEXTAUTH_SECRET) {
