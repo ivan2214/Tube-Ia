@@ -25,13 +25,17 @@ export interface TimelineEntry {
 export const timelineEntrySchema = z.object({
   timestamp: z
     .number()
-    .describe("The timestamp in seconds when the topic begins"),
+    .describe(
+      "El momento en segundos cuando comienza el tema. Por ejemplo, 120 para 2 minutos"
+    ),
   topic: z
     .string()
-    .describe("A brief description of the topic being discussed"),
+    .describe("Un título corto o resumen del tema que se está discutiendo"),
   description: z
     .string()
-    .describe("A detailed description of the topic, if necessary"),
+    .describe(
+      "Una descripción detallada y completa del tema tratado en este segmento"
+    ),
 });
 
 // Schema for the complete timeline

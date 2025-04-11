@@ -12,6 +12,12 @@ import { createStreamableValue } from "ai/rsc";
 
 const gemini = google("gemini-2.0-flash-001");
 
+const systemPrompt = `
+Eres un analista experto en contenido de video. Tu tarea es analizar transcripciones de videos para identificar los temas discutidos y construir una línea de tiempo clara y precisa.
+
+Tus respuestas deben ser en español. Siempre responde usando el formato JSON especificado. No incluyas explicaciones adicionales fuera de ese formato.
+`;
+
 export async function processVideo(url: string) {
   // Validate the URL
   const { url: validatedUrl } = videoSchema.parse({ url });
@@ -41,53 +47,50 @@ export async function processVideo(url: string) {
   // Create a promise to handle the async processing
   (async () => {
     try {
+      const userPrompt = `
+A continuación te proporciono la transcripción de un video de YouTube, con marcas de tiempo.
+
+Identifica los cambios significativos de tema a lo largo del video y genera una línea de tiempo detallada. Para cada sección importante, proporciona:
+
+1. El timestamp en segundos exactos cuando comienza (como número, entero o decimal)
+2. Un título breve del tema (máximo 10 palabras)
+3. Una descripción clara y detallada de lo que se trata en esa sección
+
+Requisitos:
+- Usa los timestamps del transcript para ser preciso
+- Ordena cronológicamente los temas
+- Detecta entre 5 y 10 secciones clave (más si el video es largo)
+- No omitas las partes finales del video
+- Si hay timestamps en formato HH:MM:SS, conviértelos a segundos
+- Responde solo con el JSON solicitado, sin explicaciones
+
+Formato de salida:
+[
+  {
+    "timestamp": 0,
+    "topic": "Introducción",
+    "description": "El presentador se presenta y da una visión general del video."
+  },
+  {
+    "timestamp": 92.5,
+    "topic": "Compresión del concreto",
+    "description": "Se analiza cómo el concreto actúa bajo compresión, con ejemplos visuales."
+  }
+  // ...
+]
+
+Aquí está la transcripción:
+${transcript}
+`;
+
       // Use AI to analyze transcript and generate timeline
       const { partialObjectStream } = streamObject({
         model: gemini,
         schema: timelineSchema,
-        prompt: `
-          You are a video content analyzer. I'll provide you with a YouTube video transcript with timestamps.
-          Create a precise timeline of topics discussed in the video based on this transcript.
-          Ensure always respond in spanish.
-          
-          For each significant topic or section change in the video, provide:
-          1. The timestamp in seconds when the topic begins (be very precise with this)
-          2. A brief description of the topic being discussed
-          3. A detailed description of what the topic covers
-          
-          Format your response as an array of objects, each with:
-          - 'timestamp' (number in seconds)
-          - 'topic' (string, a brief title)
-          - 'description' (string, a detailed explanation)
-          
-          Here's the transcript:
-          ${transcript}
-          
-          Example output format:
-          [
-            { 
-              "timestamp": 0, 
-              "topic": "Introduction to the video", 
-              "description": "The speaker introduces themselves and provides an overview of what will be covered in the video."
-            },
-            { 
-              "timestamp": 120, 
-              "topic": "First main concept", 
-              "description": "Detailed explanation of the first concept, including key points and examples."
-            }
-          ]
-          
-          IMPORTANT INSTRUCTIONS:
-          1. Be extremely precise with timestamps - they must match exactly when the topic is discussed in the video
-          2. Ensure timestamps are in chronological order
-          3. Identify at least 5-10 key sections in the video
-          4. For longer videos (over 30 minutes), identify more sections to provide a comprehensive overview
-          5. Ensure you capture the main topics throughout the entire video, not just the beginning
-          6. Convert any timestamp format (like MM:SS) to seconds
-          7. Verify that each topic accurately reflects the content at that specific timestamp
-        `,
+        system: systemPrompt,
+        prompt: userPrompt,
         schemaDescription:
-          "An array of objects with timestamp, topic, and description properties",
+          "Un arreglo de objetos que contiene propiedades de marca de tiempo (timestamp), tema (topic) y descripción detallada (description)",
       });
 
       for await (const partialObject of partialObjectStream) {

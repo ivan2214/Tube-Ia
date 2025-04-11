@@ -38,7 +38,7 @@ export default function VideoAnalysisSection() {
   return (
     <div className="relative">
       <h2 className="mb-4 font-bold text-xl">{videoTitle}</h2>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <YouTubePlayer
           videoId={videoId}
           onPlayerReady={handlePlayerReady}

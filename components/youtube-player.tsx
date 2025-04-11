@@ -131,7 +131,7 @@ export default function YouTubePlayer({
   };
 
   return (
-    <Card className="relative aspect-video overflow-hidden">
+    <Card className="relative col-span-2 aspect-video overflow-hidden">
       <div ref={playerContainerRef} className="h-full w-full">
         {/* Player will be created here */}
       </div>
