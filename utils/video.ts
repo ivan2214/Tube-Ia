@@ -1,4 +1,4 @@
-import { YoutubeTranscript } from "youtube-transcript";
+import { type TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
 import axios from "axios";
 import { formatTime } from "@/utils/format-time";
 
@@ -26,9 +26,10 @@ export async function getVideoTitle(videoId: string): Promise<string | null> {
 // Fetch YouTube transcript with chunking for longer videos
 export async function getVideoTranscript(videoId: string): Promise<string> {
   try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-      lang: "es", // Ensure English transcript if available
-    });
+    const transcript: TranscriptResponse[] =
+      await YoutubeTranscript.fetchTranscript(videoId, {
+        lang: "es", // Ensure English transcript if available
+      });
 
     if (!transcript || transcript.length === 0) {
       throw new Error("No transcript available for this video");
@@ -37,7 +38,7 @@ export async function getVideoTranscript(videoId: string): Promise<string> {
     // Format transcript with timestamps and ensure they're in chronological order
     return transcript
       .sort((a, b) => a.offset - b.offset)
-      .map((item) => `[${formatTime(item.offset / 1000)}] ${item.text}`)
+      .map((item) => `[${formatTime(item.offset)}] ${item.text}`)
       .join("\n");
   } catch (error) {
     console.error("Error fetching transcript:", error);

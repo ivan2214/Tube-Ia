@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { formatTime } from "@/utils/format-time";
 
 interface TimelineProps {
   entries: TimelineEntry[];
@@ -30,12 +31,6 @@ export default function Timeline({
   if (!entries || entries.length === 0) {
     return null;
   }
-
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
 
   // Sort entries by timestamp
   const sortedEntries = [...entries].sort((a, b) => a.timestamp - b.timestamp);
