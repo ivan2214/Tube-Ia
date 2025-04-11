@@ -30,7 +30,15 @@ export default function Timeline({
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    const hours = Math.floor(minutes / 60);
+
+    const formattedMinutes = String(minutes % 60).padStart(2, "0");
+    const formattedSeconds = String(remainingSeconds).padStart(2, "0");
+    const formattedHours = String(hours).padStart(2, "0");
+
+    return hours > 0
+      ? `${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      : `${formattedMinutes}:${formattedSeconds}`;
   };
 
   const createYouTubeLink = (videoId: string, timestamp: number): string => {
@@ -58,8 +66,7 @@ export default function Timeline({
               <div className="-left-[7px] absolute top-1 h-3 w-3 rounded-full bg-primary" />
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="font-mono">
-                  {/* {formatTime(entry.timestamp)} */}
-                  {entry.timestamp}
+                  {formatTime(entry.timestamp)}
                 </Badge>
                 <a
                   href={createYouTubeLink(videoId, entry.timestamp)}
