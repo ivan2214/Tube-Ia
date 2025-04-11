@@ -38,7 +38,12 @@ export async function getVideoTranscript(videoId: string): Promise<string> {
     // Format transcript with timestamps and ensure they're in chronological order
     return transcript
       .sort((a, b) => a.offset - b.offset)
-      .map((item) => `[${formatTime(item.offset)}] ${item.text}`)
+      .map(
+        (item) =>
+          `[${formatTime(item.offset)} - ${formatTime(
+            item.offset + item.duration
+          )}] ${item.text}`
+      )
       .join("\n");
   } catch (error) {
     console.error("Error fetching transcript:", error);
