@@ -5,7 +5,7 @@ import { AuthProvider } from "@/entities/auth/providers/auth-provider";
 import Navbar from "@/shared/components/navbar";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
-import { AuthModals } from "@/entities/auth/components/auth-modals";
+import { ClientProvider } from "@/shared/providers/client-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,12 +39,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <main className="@container flex min-h-screen flex-col">
-              <Navbar />
-              <section className="flex-1">{children}</section>
-              <Toaster />
-              <AuthModals />
-            </main>
+            <ClientProvider>
+              <main className="@container flex min-h-screen flex-col">
+                <Navbar />
+                <section className="flex-1">{children}</section>
+                <Toaster />
+              </main>
+            </ClientProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
