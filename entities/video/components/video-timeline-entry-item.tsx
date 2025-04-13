@@ -59,7 +59,8 @@ export const TimelineEntryItem = memo(
       prevProps.entry.title === nextProps.entry.title &&
       prevProps.entry.description === nextProps.entry.description &&
       prevProps.isActive === nextProps.isActive &&
-      prevProps.compact === nextProps.compact
+      prevProps.compact === nextProps.compact &&
+      prevProps.onClick === nextProps.onClick
     );
   }
 );

@@ -32,14 +32,13 @@ export function VideoTimeline({
   return (
     <Wrapper className={wrapperClassName}>
       <div className={compact ? "space-y-2" : ""}>
-        {timeline.map((entry, index) => (
+        {timeline.map((entry) => (
           <motion.div
             key={`${entry.time}-${entry.title}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: 0.2,
-              delay: index * 0.1,
               ease: "easeOut",
             }}
           >
