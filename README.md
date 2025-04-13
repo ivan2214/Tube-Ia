@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Generator Timeline AI
 
-## Getting Started
+Una aplicación potenciada por IA que genera automáticamente líneas de tiempo y resúmenes de videos de YouTube, facilitando la navegación y comprensión del contenido.
 
-First, run the development server:
+## 🌟 Características
+
+- **Análisis de Video con IA**: Genera líneas de tiempo y resúmenes de videos de YouTube
+- **Autenticación de Usuarios**: Inicio de sesión seguro con email/contraseña, Google y GitHub
+- **Rutas Protegidas**: Control de acceso basado en roles para diferentes secciones
+- **Diseño Responsivo**: Funciona en dispositivos de escritorio y móviles
+- **Modo Oscuro/Claro**: Elige tu tema preferido
+
+## 🛠️ Stack Tecnológico
+
+- **Frontend**: Next.js 15, React 19, Tailwind CSS, Shadcn UI
+- **Backend**: Rutas API de Next.js, Server Actions
+- **Autenticación**: Auth.js (NextAuth) v5
+- **Base de Datos**: PostgreSQL con Prisma ORM
+- **Integración de IA**: Google AI SDK
+- **Estilos**: Tailwind CSS con animaciones
+
+## 📋 Requisitos Previos
+
+- Node.js 18+
+- Base de datos PostgreSQL
+- Credenciales de API de Google (para funciones de IA)
+- Credenciales OAuth (para inicio de sesión social)
+
+## 🚀 Primeros Pasos
+
+### Instalación
+
+1. Clona el repositorio:
+
+```bash
+git clone https://github.com/tunombre/YouTube-Generator-Timeline-AI.git
+cd YouTube-Generator-Timeline-AI
+```
+
+2. Instala las dependencias:
+
+```bash
+npm install
+```
+
+3. Configura las variables de entorno:
+   Crea un archivo `.env` en el directorio raíz con las siguientes variables:
+
+```
+# Base de datos
+DATABASE_URL="postgresql://username:password@localhost:5432/youtube_timeline_ai"
+
+# Autenticación
+AUTH_SECRET="tu-secreto-de-autenticacion"
+GITHUB_CLIENT_ID="tu-github-client-id"
+GITHUB_CLIENT_SECRET="tu-github-client-secret"
+GOOGLE_CLIENT_ID="tu-google-client-id"
+GOOGLE_CLIENT_SECRET="tu-google-client-secret"
+
+# Google AI API
+GOOGLE_AI_API_KEY="tu-clave-de-api-de-google-ai"
+```
+
+4. Configura la base de datos:
+
+```bash
+npx prisma migrate dev
+```
+
+5. Ejecuta el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧩 Estructura del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **/app**: Rutas de la aplicación Next.js
+  - **(public)**: Rutas públicas accesibles para todos los usuarios
+  - **(protected)**: Rutas que requieren autenticación
+- **/actions**: Acciones del servidor para manejo de formularios y llamadas API
+- **/components**: Componentes UI reutilizables
+- **/entities**: Componentes y lógica específicos del dominio
+- **/prisma**: Esquema de base de datos y migraciones
+- **/schemas**: Esquemas de validación Zod
+- **/shared**: Utilidades y hooks compartidos
 
-## Learn More
+## 🔒 Autenticación
 
-To learn more about Next.js, take a look at the following resources:
+La aplicación utiliza Auth.js (NextAuth) v5 para autenticación con los siguientes proveedores:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Email/Contraseña
+- GitHub
+- Google
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Los roles de usuario incluyen:
 
-## Deploy on Vercel
+- Usuarios regulares: Pueden generar líneas de tiempo de videos
+- Usuarios administradores: Capacidades adicionales de gestión
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎯 Uso
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Regístrate o inicia sesión en tu cuenta
+2. Pega una URL de video de YouTube en el campo de entrada
+3. La IA analizará el video y generará una línea de tiempo
+4. Navega por el video utilizando los puntos de la línea de tiempo generada
+5. Guarda o comparte tus líneas de tiempo generadas
+
+## 🤝 Contribuciones
+
+¡Las contribuciones son bienvenidas! No dudes en enviar un Pull Request.
+
+1. Haz un fork del repositorio
+2. Crea tu rama de características (`git checkout -b feature/caracteristica-asombrosa`)
+3. Haz commit de tus cambios (`git commit -m 'Añadir alguna característica asombrosa'`)
+4. Haz push a la rama (`git push origin feature/caracteristica-asombrosa`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo LICENSE para más detalles.
+
+## 📞 Contacto
+
+Si tienes alguna pregunta o sugerencia, por favor abre un issue o contacta al propietario del repositorio.
+
+---
+
+Construido con ❤️ usando Next.js, React y tecnologías de IA.
