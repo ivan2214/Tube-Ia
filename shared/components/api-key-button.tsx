@@ -50,7 +50,8 @@ export function ApiKeyButton({ hasApiKey, onApiKeyChange }: ApiKeyButtonProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" className="relative">
+            <span className="mr-1">API Key</span>
             <Key className="h-5 w-5" />
             {hasApiKey && (
               <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-green-500" />

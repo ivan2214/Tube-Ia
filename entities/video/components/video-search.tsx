@@ -14,6 +14,7 @@ import {
 } from "@/shared/components/ui/card";
 import { extractVideoId } from "@/shared/utils/youtube-utils";
 import { redirect } from "next/navigation";
+import { Badge } from "@/shared/components/ui/badge";
 
 interface VideoSearchProps {
   hasApiKey: boolean;
@@ -27,7 +28,7 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
     e.preventDefault();
 
     if (!hasApiKey) {
-      setError("Please add your OpenAI API key to continue");
+      setError("Por favor, agrega tu clave API de Google para continuar");
       return;
     }
 
@@ -35,7 +36,7 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
 
     const videoId = extractVideoId(input);
     if (!videoId) {
-      setError("Please enter a valid YouTube URL or video ID");
+      setError("Por favor, ingresa una URL o ID válido de YouTube");
       return;
     }
 
@@ -49,10 +50,13 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Analyze a YouTube Video</CardTitle>
+        <CardTitle>Analizar un Video de YouTube</CardTitle>
         <CardDescription>
-          Enter a YouTube video URL or ID to generate a timeline and chat about
-          its content
+          Ingresa una URL o ID de YouTube para generar una línea de tiempo y
+          chatear sobre su contenido.
+          <Badge className="mt-2">
+            Necesitas una clave API de Google para usar esta funcionalidad.
+          </Badge>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -68,7 +72,7 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
           <Button type="submit" className="w-full">
-            Generate Timeline
+            Generar Línea de Tiempo y chatear
           </Button>
         </form>
       </CardContent>

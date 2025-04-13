@@ -27,8 +27,9 @@ export default async function Navbar() {
           <DesktopMenu />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-x-3">
           <ApiKeyButton hasApiKey={hasApiKey} />
+
           <ModeToggle />
 
           <AuthButtons currentUser={currentUser || null} />
