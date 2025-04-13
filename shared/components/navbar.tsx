@@ -6,9 +6,14 @@ import { getCurrentUser } from "@/shared/hooks/current-user";
 import { MobileMenu } from "@/shared/components/mobile-menu";
 import { AuthButtons } from "@/entities/auth/components/auth-buttons";
 import { DesktopMenu } from "@/shared/components/desktop-menu";
+import { getApiKey } from "../actions/api-key-actions";
+import { ApiKeyButton } from "./api-key-button";
 
 export default async function Navbar() {
   const { currentUser } = await getCurrentUser();
+
+  const { apiKey } = await getApiKey();
+  const hasApiKey = !!apiKey;
 
   return (
     <header className="container mx-auto border-b">
@@ -22,7 +27,9 @@ export default async function Navbar() {
           <DesktopMenu />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-x-3">
+          <ApiKeyButton hasApiKey={hasApiKey} />
+
           <ModeToggle />
 
           <AuthButtons currentUser={currentUser || null} />
