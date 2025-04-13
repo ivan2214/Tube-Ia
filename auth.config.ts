@@ -1,10 +1,10 @@
+import bcrypt from "bcryptjs";
+import { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import { CredentialsSignin, type NextAuthConfig } from "next-auth";
-import bcrypt from "bcryptjs";
-import { loginSchema } from "@/schemas/auth";
-import { getUserByEmail } from "@/data/user";
+import { loginSchema } from "@/entities/auth/schemas/auth";
+import { getUserByEmail } from "@/entities/user/data/user";
 
 class InvalidLoginError extends CredentialsSignin {
   code = "Invalid identifier or password";

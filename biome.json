@@ -17,7 +17,8 @@
 			".vscode",
 			"*.config.{js,ts,json,mjs}",
 			"*.jsonc",
-			"*.yml"
+			"*.yml",
+			"prisma/**"
 		]
 	},
 	"formatter": {

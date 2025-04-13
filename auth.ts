@@ -1,10 +1,10 @@
-import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { db } from "@/db";
 import authConfig from "@/auth.config";
-import { RoleUser } from "@prisma/client";
-import { getUserById } from "./data/user";
-import { getAccountByUserId } from "./data/accounts";
+import { db } from "@/db";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { RoleUser } from "@/prisma/generated";
+import NextAuth from "next-auth";
+import { getUserById } from "@/entities/user/data/user";
+import { getAccountByUserId } from "@/entities/user/data/accounts";
 
 // Asegurarse de que el secreto esté definido
 if (!process.env.NEXTAUTH_SECRET) {
@@ -30,10 +30,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const isAdmin = user.email === process.env.ADMIN_EMAIL;
 
       if (isAdmin) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { roleUser: RoleUser.ADMIN },
-        });
+        const existingUser = await getUserById(user.id);
+
+        if (existingUser) {
+          await db.user.update({
+            where: { id: user.id },
+            data: { roleUser: RoleUser.ADMIN },
+          });
+        }
+
         user.roleUser = RoleUser.ADMIN;
       }
       return true;
