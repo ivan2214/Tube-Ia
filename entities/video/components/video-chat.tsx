@@ -39,7 +39,7 @@ export function VideoChat({ videoId, videoTitle, timeline }: VideoChatProps) {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages.length]);
 
   return (
     <div className="flex h-[60vh] flex-col">
