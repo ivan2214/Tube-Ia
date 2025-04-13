@@ -77,15 +77,34 @@ npm run dev
 
 ## 🧩 Estructura del Proyecto
 
-- **/app**: Rutas de la aplicación Next.js
-  - **(public)**: Rutas públicas accesibles para todos los usuarios
+- **/app**: Rutas principales de Next.js
+  - **(public)**: Rutas accesibles sin autenticación
+    - `/about`: Página de información del proyecto
   - **(protected)**: Rutas que requieren autenticación
-- **/actions**: Acciones del servidor para manejo de formularios y llamadas API
-- **/components**: Componentes UI reutilizables
-- **/entities**: Componentes y lógica específicos del dominio
-- **/prisma**: Esquema de base de datos y migraciones
-- **/schemas**: Esquemas de validación Zod
-- **/shared**: Utilidades y hooks compartidos
+    - `/profile`: Gestión de perfil de usuario
+    - `/admin`: Panel de administración
+- **/entities**: Lógica de negocio por dominio
+  - `auth`: Autenticación y componentes relacionados
+  - `user`: Gestión de perfiles y datos de usuario
+  - `admin`: Funcionalidades exclusivas de administrador
+- **/shared**: Componentes y utilidades reutilizables
+  - `components`: UI components (botones, formularios, modales)
+  - `hooks`: Hooks personalizados (useAuth, currentUser)
+  - `lib`: Utilidades y configuraciones comunes
+- **/actions**: Acciones del servidor
+  - `auth.ts`: Registro y autenticación
+  - `profile.ts`: Actualización de perfil
+  - `admin.ts`: Gestión de usuarios
+- **/data**: Acceso a base de datos
+  - `user.ts`: Operaciones CRUD de usuarios
+  - `accounts.ts`: Manejo de cuentas vinculadas
+- **/prisma**: Configuración de base de datos
+  - `schema.prisma`: Esquema de la base de datos
+  - `migrations`: Historial de migraciones
+- **/schemas**: Validaciones con Zod
+  - `auth.ts`: Esquemas para login/registro
+  - `user-profile.ts`: Validación de perfil de usuario
+- **/middleware.ts**: Protección de rutas y lógica de autenticación
 
 ## 🔒 Autenticación
 
