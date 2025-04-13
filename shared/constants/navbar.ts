@@ -37,11 +37,11 @@ export const adminNavItems: NavItem[] = [
 
 export const navItems: NavItem[] = [
   {
-    name: "Videos anteriores",
-    href: "/videos",
+    name: "Inicio",
+    href: "/",
   },
   {
-    name: "Planes",
-    href: "/subscription-plans",
+    name: "Historial",
+    href: "/history",
   },
 ];
