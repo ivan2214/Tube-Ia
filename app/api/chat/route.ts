@@ -1,7 +1,13 @@
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { getVideoDetails } from "@/entities/video/actions/video-actions";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
+
+const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
+
+const google = createGoogleGenerativeAI({
+  apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
 const model = google("gemini-2.0-flash-001");
 

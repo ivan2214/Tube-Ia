@@ -1,5 +1,5 @@
 "use server";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamObject } from "ai";
 import { z } from "zod";
 import {
@@ -23,6 +23,12 @@ const timelineSchema = z.object({
       })
     )
     .describe("Entradas de la línea de tiempo para los momentos clave"),
+});
+
+const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
+
+const google = createGoogleGenerativeAI({
+  apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 const model = google("gemini-2.0-flash-001");
