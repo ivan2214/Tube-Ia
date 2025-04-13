@@ -7,6 +7,7 @@ import {
   getVideoDetails,
 } from "@/entities/video/actions/video-actions";
 import { createStreamableValue } from "ai/rsc";
+import { getApiKey } from "@/shared/actions/api-key-actions";
 
 const timelineSchema = z.object({
   title: z.string().describe("Título del video"),
@@ -25,15 +26,23 @@ const timelineSchema = z.object({
     .describe("Entradas de la línea de tiempo para los momentos clave"),
 });
 
-const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
-
-const google = createGoogleGenerativeAI({
-  apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
-});
-
-const model = google("gemini-2.0-flash-001");
-
 export async function generateVideoTimeline(videoId: string) {
+  const { apiKey } = await getApiKey();
+
+  if (!apiKey) {
+    return {
+      object: null,
+      error: "API_KEY_REQUIRED",
+    };
+  }
+
+  // Initialize Google AI with the user's API key
+  const google = createGoogleGenerativeAI({
+    apiKey: apiKey,
+  });
+
+  const model = google("gemini-2.0-flash-001");
+
   const videoDetails = await getVideoDetails(videoId);
   const transcript = await getVideoTranscript(videoId);
 

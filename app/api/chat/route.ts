@@ -1,21 +1,30 @@
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { getVideoDetails } from "@/entities/video/actions/video-actions";
+import { getApiKey } from "@/shared/actions/api-key-actions";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
-
-const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
-
-const google = createGoogleGenerativeAI({
-  apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
-});
-
-const model = google("gemini-2.0-flash-001");
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const { messages, videoId, timeline } = await req.json();
+
+  const { apiKey } = await getApiKey();
+
+  if (!apiKey) {
+    return {
+      object: null,
+      error: "API_KEY_REQUIRED",
+    };
+  }
+
+  // Initialize Google AI with the user's API key
+  const google = createGoogleGenerativeAI({
+    apiKey: apiKey,
+  });
+
+  const model = google("gemini-2.0-flash-001");
 
   // Get video details to provide context
   const videoDetails = await getVideoDetails(videoId);

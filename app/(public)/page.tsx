@@ -1,11 +1,11 @@
-"use client";
-
-import { redirect } from "next/navigation";
 import { VideoSearch } from "@/entities/video/components/video-search";
 import { PageHeader } from "@/shared/components/page-header";
 import { Brain, Link, MessageCircle } from "lucide-react";
+import { getApiKey } from "@/shared/actions/api-key-actions";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { apiKey } = await getApiKey();
+  const hasApiKey = !!apiKey;
   return (
     <div className="container mx-auto px-4 py-8">
       <PageHeader
@@ -14,11 +14,7 @@ export default function HomePage() {
       />
 
       <div className="mx-auto mt-8 max-w-2xl">
-        <VideoSearch
-          onSubmit={(videoId) => {
-            redirect(`/video/${videoId}`);
-          }}
-        />
+        <VideoSearch hasApiKey={hasApiKey} />
 
         <div className="mt-12 text-center">
           <h2 className="mb-4 font-semibold text-xl">How it works</h2>

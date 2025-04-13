@@ -13,17 +13,24 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { extractVideoId } from "@/shared/utils/youtube-utils";
+import { redirect } from "next/navigation";
 
 interface VideoSearchProps {
-  onSubmit: (videoId: string) => void;
+  hasApiKey: boolean;
 }
 
-export function VideoSearch({ onSubmit }: VideoSearchProps) {
+export function VideoSearch({ hasApiKey }: VideoSearchProps) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!hasApiKey) {
+      setError("Please add your OpenAI API key to continue");
+      return;
+    }
+
     setError("");
 
     const videoId = extractVideoId(input);
@@ -33,6 +40,10 @@ export function VideoSearch({ onSubmit }: VideoSearchProps) {
     }
 
     onSubmit(videoId);
+  };
+
+  const onSubmit = (videoId: string) => {
+    redirect(`/video/${videoId}`);
   };
 
   return (
@@ -52,6 +63,7 @@ export function VideoSearch({ onSubmit }: VideoSearchProps) {
               onChange={(e) => setInput(e.target.value)}
               placeholder="https://www.youtube.com/watch?v=..."
               className={error ? "border-red-500" : ""}
+              disabled={!hasApiKey}
             />
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
