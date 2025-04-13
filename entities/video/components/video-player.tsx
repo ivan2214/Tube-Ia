@@ -9,6 +9,14 @@ interface VideoPlayerProps {
   onTimeUpdate: (time: number) => void;
 }
 
+declare global {
+  interface Window {
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 export function VideoPlayer({
   videoId,
   currentTime,

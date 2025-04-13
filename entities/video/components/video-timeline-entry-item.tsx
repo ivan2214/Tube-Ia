@@ -17,7 +17,7 @@ export const TimelineEntryItem = memo(
     if (compact) {
       return (
         <Button
-          className={`cursor-pointer rounded-md p-2 transition-colors ${
+          className={`group cursor-pointer rounded-md p-2 transition-colors duration-300 ${
             isActive
               ? "border-blue-500 border-l-4 bg-blue-50"
               : "hover:bg-gray-50"
@@ -26,9 +26,13 @@ export const TimelineEntryItem = memo(
           variant="ghost"
           size="sm"
         >
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">{formatTime(entry.time)}</Badge>
-            <h3 className="font-medium text-sm">{entry.title}</h3>
+          <div className="flex items-center gap-2 group-hover:text-blue-500">
+            <Badge className="group-hover:text-blue-500" variant="outline">
+              {formatTime(entry.time)}
+            </Badge>
+            <h3 className="font-medium text-sm group-hover:text-blue-500">
+              {entry.title}
+            </h3>
           </div>
         </Button>
       );
@@ -36,17 +40,23 @@ export const TimelineEntryItem = memo(
 
     return (
       <Card
-        className={`cursor-pointer transition-all ${
+        className={`group cursor-pointer transition-colors duration-300 hover:border-blue-500 ${
           isActive ? "border-blue-500 shadow-md" : "hover:shadow-md"
         }`}
         onClick={() => onClick(entry.time)}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Badge className="mt-1 shrink-0">{formatTime(entry.time)}</Badge>
+            <Badge className="mt-1 shrink-0 group-hover:text-blue-500">
+              {formatTime(entry.time)}
+            </Badge>
             <div>
-              <h3 className="mb-1 font-medium">{entry.title}</h3>
-              <p className="text-gray-600 text-sm">{entry.description}</p>
+              <h3 className="mb-1 font-medium group-hover:text-blue-500">
+                {entry.title}
+              </h3>
+              <p className="text-gray-600 text-sm group-hover:text-blue-500">
+                {entry.description}
+              </p>
             </div>
           </div>
         </CardContent>

@@ -26,12 +26,9 @@ export function VideoTimeline({
     return currentTime >= entry.time && currentTime < nextEntryTime;
   };
 
-  const Wrapper = compact ? ScrollArea : "div";
-  const wrapperClassName = compact ? "h-[calc(100vh-300px)]" : "space-y-4";
-
   return (
-    <Wrapper className={wrapperClassName}>
-      <div className={compact ? "space-y-2" : ""}>
+    <ScrollArea className="h-[calc(100vh-300px)]">
+      <div className={compact ? "space-y-2" : "space-y-4 p-8"}>
         {timeline.map((entry) => (
           <motion.div
             key={`${entry.time}-${entry.title}`}
@@ -51,6 +48,6 @@ export function VideoTimeline({
           </motion.div>
         ))}
       </div>
-    </Wrapper>
+    </ScrollArea>
   );
 }

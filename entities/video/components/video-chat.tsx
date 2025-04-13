@@ -42,7 +42,7 @@ export function VideoChat({ videoId, videoTitle, timeline }: VideoChatProps) {
   }, [messages.length]);
 
   return (
-    <div className="flex h-[60vh] flex-col">
+    <div className="flex h-[60vh] flex-col rounded-lg border">
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
