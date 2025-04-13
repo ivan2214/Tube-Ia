@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
   // Create a context from the timeline
   const timelineContext = timeline
-    .map(
+    ?.map(
       (entry: TimelineEntry) =>
         `[${formatTime(entry.time)}] ${entry.title}: ${entry.description}`
     )

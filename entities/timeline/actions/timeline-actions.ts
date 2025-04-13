@@ -55,6 +55,11 @@ ${videoDetails.title}
 🔹 DESCRIPCIÓN DEL VIDEO:
 ${videoDetails.description}
 
+🔹 DURACIÓN DEL VIDEO:
+${Math.floor(videoDetails.duration / 60)}:${String(
+        videoDetails.duration % 60
+      ).padStart(2, "0")} (${videoDetails.duration} segundos)
+
 🔹 TRANSCRIPCIÓN:
 ${transcript}
 
@@ -64,6 +69,9 @@ ${transcript}
   - "time": marca de tiempo en segundos (por ejemplo: 90 para 1 minuto y 30 segundos).
   - "title": un título breve que resuma el contenido del momento.
   - "description": una descripción detallada en español de lo que ocurre en ese instante.
+- IMPORTANTE: Todas las marcas de tiempo DEBEN ser menores que la duración total del video (${
+        videoDetails.duration
+      } segundos).
 - Asegúrate de que las marcas de tiempo estén bien sincronizadas con el contenido del video.
 - El formato debe coincidir exactamente con el esquema JSON esperado.
 - Siempre responde en **español**.
@@ -85,6 +93,13 @@ ${transcript}
     });
 
     for await (const partialObject of partialObjectStream) {
+      // Validar que los tiempos no excedan la duración del video
+      if (partialObject.timeline) {
+        partialObject.timeline = partialObject.timeline.map((entry) => ({
+          ...entry,
+          time: Math.min(entry?.time || 0, videoDetails.duration - 1),
+        }));
+      }
       stream.update(partialObject);
     }
     stream.done();
