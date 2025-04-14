@@ -35,30 +35,30 @@ export default async function DashboardPage() {
 
   return (
     <Container>
-      <h1 className="mb-6 font-bold text-3xl">Dashboard</h1>
+      <h1 className="mb-6 font-bold text-3xl">Panel de Control</h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Welcome, {user?.name || "User"}!</CardTitle>
+            <CardTitle>¡Bienvenido, {user?.name || "Usuario"}!</CardTitle>
             <CardDescription>
-              You're signed in with {user?.email}
+              Has iniciado sesión con {user?.email}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-muted-foreground">
-              This is a protected route that requires authentication.
+              Esta es una ruta protegida que requiere autenticación.
             </p>
             <div className="flex gap-2">
               <Button asChild size="sm">
-                <Link href="/profile">View Profile</Link>
+                <Link href="/profile">Ver Perfil</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
-                <Link href="/purchases">View Purchases</Link>
+                <Link href="/purchases">Ver Compras</Link>
               </Button>
               {user?.roleUser === "ADMIN" && (
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/admin">Admin Panel</Link>
+                  <Link href="/admin">Panel de Administrador</Link>
                 </Button>
               )}
             </div>
@@ -67,32 +67,34 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Manage your account details</CardDescription>
+            <CardTitle>Información de la Cuenta</CardTitle>
+            <CardDescription>
+              Gestiona los detalles de tu cuenta
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Update your profile information and preferences.
+              Actualiza tu información de perfil y preferencias.
             </p>
             <Button asChild className="mt-4" variant="outline" size="sm">
-              <Link href="/profile">Edit Profile</Link>
+              <Link href="/profile">Editar Perfil</Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Activity</CardTitle>
-            <CardDescription>Your recent activity</CardDescription>
+            <CardTitle>Actividad</CardTitle>
+            <CardDescription>Tu actividad reciente</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
-                <span>Last login</span>
-                <span className="text-muted-foreground">Today, 10:30 AM</span>
+                <span>Último inicio de sesión</span>
+                <span className="text-muted-foreground">Hoy, 10:30 AM</span>
               </li>
               <li className="flex justify-between">
-                <span>Account created</span>
+                <span>Cuenta creada</span>
                 <span className="text-muted-foreground">
                   {user?.createdAt
                     ? new Date(user.createdAt).toLocaleDateString()

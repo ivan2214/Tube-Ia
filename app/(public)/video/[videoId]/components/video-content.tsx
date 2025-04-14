@@ -58,7 +58,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
       setIsLoading(true);
       if (!videoId) {
         toast.error("Error", {
-          description: "Video ID is required.",
+          description: "El id del video es requerido.",
         });
         return;
       }
@@ -76,7 +76,8 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
 
         if (error || !object) {
           toast.error("Error", {
-            description: "Failed to generate timeline. Please try again.",
+            description:
+              "Error al generar la linea del tiempo. Intentar de nuevo.",
           });
           return;
         }
@@ -105,7 +106,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
       }
     } catch (error) {
       toast.error("Error", {
-        description: "Failed to generate timeline. Please try again.",
+        description: "Error al generar la linea del tiempo. Intentar de nuevo.",
       });
     } finally {
       setFinished(true);
@@ -163,7 +164,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
             <Tabs defaultValue="timeline">
               <TabsList className="w-full">
                 <TabsTrigger value="timeline" className="flex-1">
-                  Timeline
+                  Línea de tiempo
                 </TabsTrigger>
                 <TabsTrigger value="chat" className="flex-1">
                   Chat
@@ -200,7 +201,9 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
         {/* Barra lateral con línea de tiempo compacta */}
         <div className="hidden lg:block">
           <div className="rounded-lg p-4 shadow-md">
-            <h2 className="mb-4 font-semibold text-lg">Video Timeline</h2>
+            <h2 className="mb-4 font-semibold text-lg">
+              Linea de tiempo del Video
+            </h2>
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(8)].map((_, i) => (

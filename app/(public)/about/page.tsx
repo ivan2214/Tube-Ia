@@ -1,5 +1,5 @@
 import { Card } from "@/shared/components/ui/card";
-import { BrainCircuit, Lightbulb, Play, Timer } from "lucide-react";
+import { BrainCircuit, Lightbulb, Timer } from "lucide-react";
 
 export const metadata = {
   title: "Acerca de | YouTube AI Analyzer",
@@ -104,7 +104,7 @@ export default function AboutPage() {
               </ol>
             </div>
 
-            <div className="flex items-center justify-center">
+            {/* <div className="flex items-center justify-center">
               <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg shadow-lg">
                 <img
                   src="/placeholder.svg?height=270&width=480"
@@ -117,11 +117,11 @@ export default function AboutPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </section>
 
-        <section>
+        {/* <section>
           <h2 className="mb-4 font-semibold text-2xl">Nuestro Equipo</h2>
           <p className="mb-6">
             Somos un equipo apasionado de ingenieros, científicos de datos y
@@ -163,7 +163,7 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );

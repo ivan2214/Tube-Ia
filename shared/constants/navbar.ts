@@ -6,6 +6,10 @@ const adminNavItems: NavItem[] = [
     name: "Admin",
     href: "/admin",
     children: [
+      {
+        name: "Admin",
+        href: "/admin",
+      },
       { name: "Users", href: "/admin/users" },
       { name: "Videos", href: "/admin/videos" },
       { name: "Chat", href: "/admin/chats" },

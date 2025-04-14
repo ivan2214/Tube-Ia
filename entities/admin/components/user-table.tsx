@@ -37,14 +37,14 @@ export function UserTable({ users }: UserTableProps) {
         return;
       }
 
-      toast.success("Success", {
-        description: "User role updated successfully",
+      toast.success("Éxito", {
+        description: "Rol de usuario actualizado exitosamente",
       });
 
       router.refresh();
     } catch (error) {
       toast.error("Error", {
-        description: "Failed to update user role",
+        description: "Error al actualizar el rol del usuario",
       });
     } finally {
       setIsLoading(null);
@@ -56,11 +56,11 @@ export function UserTable({ users }: UserTableProps) {
       <table className="w-full">
         <thead>
           <tr className="border-b">
-            <th className="p-2 text-left">Name</th>
-            <th className="p-2 text-left">Email</th>
-            <th className="p-2 text-left">Role</th>
-            <th className="p-2 text-left">Created</th>
-            <th className="p-2 text-left">Actions</th>
+            <th className="p-2 text-left">Nombre</th>
+            <th className="p-2 text-left">Correo</th>
+            <th className="p-2 text-left">Rol</th>
+            <th className="p-2 text-left">Creado</th>
+            <th className="p-2 text-left">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -96,10 +96,10 @@ export function UserTable({ users }: UserTableProps) {
                       disabled={isLoading === user.id}
                     >
                       {user.roleUser === "ADMIN"
-                        ? "Remove Admin"
-                        : "Make Admin"}
+                        ? "Quitar Admin"
+                        : "Hacer Admin"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                    <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </td>

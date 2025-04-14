@@ -66,7 +66,7 @@ export const VideoMessageInput = ({
       <Input
         value={input}
         onChange={handleInputChange}
-        placeholder="Ask about the video..."
+        placeholder="Hablar sobre el video..."
         disabled={isLoading}
         className="flex-1"
       />
