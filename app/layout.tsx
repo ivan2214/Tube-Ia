@@ -6,6 +6,7 @@ import Navbar from "@/shared/components/navbar";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { ClientProvider } from "@/shared/providers/client-provider";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,15 +39,17 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <ClientProvider>
-              <main className="@container flex min-h-screen flex-col">
-                <Navbar />
-                <section className="flex-1">{children}</section>
-                <Toaster />
-              </main>
-            </ClientProvider>
-          </AuthProvider>
+          <Suspense fallback={null}>
+            <AuthProvider>
+              <ClientProvider>
+                <main className="@container flex min-h-screen flex-col">
+                  <Navbar />
+                  <section className="flex-1">{children}</section>
+                  <Toaster />
+                </main>
+              </ClientProvider>
+            </AuthProvider>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>
