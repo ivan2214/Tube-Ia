@@ -77,28 +77,59 @@ export async function getVideoDetails(videoId: string): Promise<VideoDetails> {
 
 export async function getVideoTranscript(videoId: string): Promise<string> {
   try {
-    const transcript: TranscriptResponse[] =
-      await YoutubeTranscript.fetchTranscript(videoId);
-
-    if (!transcript || transcript.length === 0) {
-      throw new Error("No transcript available for this video");
+    // Validar que el ID del video sea válido
+    if (!videoId || typeof videoId !== "string") {
+      throw new Error("Invalid video ID provided");
     }
 
-    // Format transcript with timestamps and ensure they're in chronological order
-    return transcript
-      .sort((a, b) => a.offset - b.offset)
-      .map(
-        (item) =>
-          `[${formatTime(item.offset)} - ${formatTime(
-            item.offset + item.duration
-          )}] ${item.text}`
-      )
-      .join("\n");
+    console.log(`Attempting to fetch transcript for video: ${videoId}`);
+
+    try {
+      const transcript: TranscriptResponse[] =
+        await YoutubeTranscript.fetchTranscript(videoId);
+
+      if (!transcript || transcript.length === 0) {
+        console.error(`No transcript available for video: ${videoId}`);
+        return "Este video no tiene transcripción disponible. YouTube no proporciona subtítulos para este contenido.";
+      }
+
+      console.log(
+        `Successfully fetched transcript with ${transcript.length} entries`
+      );
+
+      // Format transcript with timestamps and ensure they're in chronological order
+      return transcript
+        .sort((a, b) => a.offset - b.offset)
+        .map(
+          (item) =>
+            `[${formatTime(item.offset)} - ${formatTime(
+              item.offset + item.duration
+            )}] ${item.text}`
+        )
+        .join("\n");
+    } catch (specificError) {
+      // Capturar el error específico de transcripción deshabilitada
+      if (
+        specificError instanceof Error &&
+        specificError.message.includes("Transcript is disabled on this video")
+      ) {
+        console.error(`Transcript is disabled for video ${videoId}`);
+        return "Este video tiene la transcripción deshabilitada por el creador del contenido. No es posible obtener subtítulos para este video.";
+      }
+
+      // Re-lanzar otros errores
+      throw specificError;
+    }
   } catch (error) {
+    // Mejorar el registro de errores para diagnóstico
     console.error("Error fetching transcript:", error);
-    throw new Error(
-      "Failed to fetch video transcript. The video may not have captions available."
-    );
+    if (error instanceof Error) {
+      console.error(`Error message: ${error.message}`);
+      console.error(`Error stack: ${error.stack}`);
+    }
+
+    // En lugar de lanzar un error, devolver un mensaje amigable
+    return "No se pudo obtener la transcripción del video. Es posible que el video no tenga subtítulos disponibles o que estén deshabilitados por el creador.";
   }
 }
 
