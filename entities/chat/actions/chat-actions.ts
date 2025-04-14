@@ -8,9 +8,11 @@ import type { Message } from "@ai-sdk/react";
 export async function saveChat({
   messages,
   videoId,
+  chatId,
 }: {
   messages: Message[];
   videoId?: string;
+  chatId?: string;
 }) {
   try {
     const { currentUser } = await getCurrentUser();
@@ -18,18 +20,42 @@ export async function saveChat({
     if (!currentUser) {
       throw new Error("Unauthorized");
     }
+
+    const chat = await db.chat.findUnique({
+      where: {
+        id: chatId,
+        videoId,
+      },
+    });
+
+    // si ya existe un chat para el video, lo actualizamos
+    if (chat && chat.videoId === videoId) {
+      const updatedChat = await updateChat(chat.id, messages, videoId);
+      return updatedChat;
+    }
+
+    // si no existe un chat para el video, lo creamos
+    if (!videoId) {
+      throw new Error("Video ID is required");
+    }
+    const newChat = await createChat(videoId);
+    return newChat;
   } catch (error) {
     console.error("Error saving chat:", error);
     throw error;
   }
 }
 
-export async function createChat(historyId: string) {
+export async function createChat(videoId: string) {
   try {
     const newChat = await db.chat.create({
       data: {
         messages: JSON.stringify([]),
-        historyId,
+        video: {
+          connect: {
+            id: videoId,
+          },
+        },
       },
     });
     return newChat;
@@ -39,7 +65,11 @@ export async function createChat(historyId: string) {
   }
 }
 
-export async function updateChat(chatId: string, messages: Message[]) {
+export async function updateChat(
+  chatId: string,
+  messages: Message[],
+  videoId: string
+) {
   try {
     const { currentUser } = await getCurrentUser();
 
@@ -58,6 +88,7 @@ export async function updateChat(chatId: string, messages: Message[]) {
     const updatedChat = await db.chat.update({
       where: {
         id: chatId,
+        videoId,
       },
       data: {
         messages: JSON.stringify(messages),
@@ -82,16 +113,20 @@ export async function deleteChat(chatId: string) {
       where: {
         id: chatId,
       },
-      include: {
-        history: {
+      select: {
+        video: {
           select: {
-            userId: true,
+            history: {
+              select: {
+                userId: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!chat || chat.history?.userId !== currentUser.id) {
+    if (!chat || chat.video?.history?.userId !== currentUser.id) {
       throw new Error("Unauthorized");
     }
 
@@ -121,13 +156,6 @@ export async function getChat(chatId: string): Promise<{
       where: {
         id: chatId,
       },
-      include: {
-        history: {
-          select: {
-            videoId: true,
-          },
-        },
-      },
     });
 
     if (!chat) {
@@ -136,64 +164,9 @@ export async function getChat(chatId: string): Promise<{
 
     return {
       messages: chat.messages as unknown as Message[],
-      videoId: chat.history?.videoId,
     };
   } catch (error) {
     console.error("Error getting chat:", error);
     return null;
-  }
-}
-
-export async function getChatsByVideoId(videoId: string): Promise<
-  {
-    id: string;
-    messages: Message[];
-    createdAt: Date;
-  }[]
-> {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return [];
-    }
-
-    const history = await db.history.findUnique({
-      where: {
-        userId_videoId: {
-          userId: session.user.id,
-          videoId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!history) {
-      return [];
-    }
-
-    const chats = await db.chat.findMany({
-      where: {
-        historyId: history.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    if (!chats) {
-      return [];
-    }
-
-    return chats.map((chat) => ({
-      id: chat.id,
-      messages: chat.messages as unknown as Message[],
-      createdAt: chat.createdAt,
-    }));
-  } catch (error) {
-    console.error("Error getting chats by video ID:", error);
-    return [];
   }
 }

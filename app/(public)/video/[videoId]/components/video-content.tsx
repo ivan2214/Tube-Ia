@@ -24,6 +24,7 @@ import {
 } from "@/entities/video/actions/video-db";
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { saveToHistory } from "@/entities/history/actions/history-action";
+import { generateId } from "ai";
 
 // Definimos la interfaz para las props del componente
 interface VideoContentProps {
@@ -188,7 +189,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
               <TabsContent value="chat" className="mt-4">
                 <VideoChat
                   video={existingVideo || newVideo}
-                  chatId={existingVideo?.chatId}
+                  chatId={existingVideo?.chat?.id || generateId()}
                 />
               </TabsContent>
             </Tabs>

@@ -15,6 +15,7 @@ import { VideoMessageInput } from "./video-message-input";
 import { type Message, useChat } from "@ai-sdk/react";
 import type { VideoWithRelations } from "../actions/video-db";
 import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
+import { saveChat } from "@/entities/chat/actions/chat-actions";
 
 interface VideoChatProps {
   video: (VideoWithRelations | NewVideo) | null;
@@ -41,6 +42,14 @@ export function VideoChat({
               content: `¡Hola! Soy tu asistente de IA para "${videoTitle}". Pregúntame cualquier cosa sobre este video y te ayudaré a entender mejor su contenido.`,
             },
           ],
+    async onResponse(response) {
+      if (response) {
+        await saveChat({
+          messages,
+          videoId,
+        });
+      }
+    },
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);

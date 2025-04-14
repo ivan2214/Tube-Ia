@@ -99,14 +99,13 @@ model Video {
   timeline Timeline[]
 
   // un video puede tener un chat asociado o no
-  chat   Chat?   @relation(fields: [chatId], references: [id])
-  chatId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  chat Chat?
+
   @@index([historyId])
-  @@index([chatId])
 }
 
 model Timeline {
@@ -128,7 +127,8 @@ model Chat {
   id       String @id @default(cuid())
   messages Json   @db.JsonB
 
-  video Video[]
+  video   Video? @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
