@@ -3,15 +3,17 @@
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import type { TimelineEntry } from "@/entities/timeline/types";
+
 import { Loader, Send } from "lucide-react";
+
+import type { TimelineEntry } from "@/entities/timeline/types";
 
 export const VideoMessageInput = ({
   videoId,
   timeline,
 }: {
-  videoId: string;
-  timeline: TimelineEntry[];
+  videoId?: string;
+  timeline?: TimelineEntry[] | null;
 }) => {
   const { input, handleSubmit, handleInputChange, isLoading } = useChat({
     id: "chat",

@@ -12,25 +12,22 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { MemoizedMarkdown } from "@/shared/components/memoized-markdown";
 import { VideoMessageInput } from "./video-message-input";
 
-import type { TimelineEntry } from "@/entities/timeline/types";
 import { type Message, useChat } from "@ai-sdk/react";
+import type { VideoWithRelations } from "../actions/video-db";
+import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
 
 interface VideoChatProps {
-  videoId: string;
-  videoTitle: string;
-  timeline: TimelineEntry[];
-  chatId?: string;
+  video: (VideoWithRelations | NewVideo) | null;
+  chatId?: string | null;
   initialMessages?: Message[];
 }
 
 export function VideoChat({
-  videoId,
-  videoTitle,
-  timeline,
+  video,
   chatId,
   initialMessages = [],
 }: VideoChatProps) {
-  console.log("VideoChat");
+  const { title: videoTitle, timeline, id: videoId } = video || {};
 
   const { messages } = useChat({
     id: chatId || "chat",

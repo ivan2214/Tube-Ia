@@ -1,16 +1,14 @@
 "use client";
 
+// Este componente maneja la visualización y funcionalidad principal del reproductor de video
+// Importamos los hooks necesarios de React y componentes personalizados
 import { useEffect, useState } from "react";
 import { VideoPlayer } from "@/entities/video/components/video-player";
 import { VideoTimeline } from "@/entities/video/components/video-timeline";
 import { VideoChat } from "@/entities/video/components/video-chat";
 import { generateVideoTimeline } from "@/entities/timeline/actions/timeline-actions";
-import {
-  saveToHistory,
-  getHistoryWithTimeline,
-} from "@/entities/history/actions/history-action";
-import { getChatsByVideoId } from "@/entities/chat/actions/chat-actions";
 
+// Importamos componentes de UI y tipos necesarios
 import {
   Tabs,
   TabsContent,
@@ -18,89 +16,117 @@ import {
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import type { TimelineEntry } from "@/entities/timeline/types";
 import { toast } from "sonner";
 import { readStreamableValue } from "ai/rsc";
-import type { Message } from "ai";
+import {
+  getVideoById,
+  type VideoWithRelations,
+} from "@/entities/video/actions/video-db";
+import type { TimelineEntry } from "@/entities/timeline/types";
+import { saveToHistory } from "@/entities/history/actions/history-action";
 
+// Definimos la interfaz para las props del componente
 interface VideoContentProps {
   videoId: string;
 }
 
+// Componente principal que muestra el contenido del video
+
+export interface NewVideo {
+  id?: string;
+  title?: string;
+  details?: string;
+  duration?: number;
+  timeline?: TimelineEntry[] | null;
+  url?: string;
+}
+
 export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
-  const [videoTitle, setVideoTitle] = useState<string>("");
-  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [chatHistory, setChatHistory] = useState<
-    {
-      id: string;
-      messages: Message[];
-      createdAt: Date;
-    }[]
-  >([]);
-  const [selectedChatId, setSelectedChatId] = useState<string | undefined>(
-    undefined
+  const [timeline, setTimeline] = useState<TimelineEntry[] | null>(null);
+  const [existingVideo, setExistingVideo] = useState<VideoWithRelations | null>(
+    null
   );
+  const [newVideo, setNewVideo] = useState<NewVideo | null>(null);
+  const [finished, setFinished] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
+  // Efecto para cargar los datos del video al montar el componente
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      if (!videoId) {
+        toast.error("Error", {
+          description: "Video ID is required.",
+        });
+        return;
+      }
 
-        // First check if we have this video in history
-        const { history, timeline: savedTimeline } =
-          await getHistoryWithTimeline(videoId);
+      // Primero verificamos si el video existe en el historial
+      const { video: existingVideo } = await getVideoById(videoId);
 
-        // Get chat history for this video
-        const chats = await getChatsByVideoId(videoId);
-        setChatHistory(chats);
+      if (existingVideo) {
+        setExistingVideo(existingVideo);
+        setIsLoading(false);
+      } else {
+        // Si no existe, generamos una nueva línea de tiempo
+        const { object, error, details, duration, title } =
+          await generateVideoTimeline(videoId);
 
-        if (history && savedTimeline.length > 0) {
-          // If we have history, use it
-          setIsLoading(false);
-          setVideoTitle(history.title);
-          setTimeline(savedTimeline);
+        if (error || !object) {
+          toast.error("Error", {
+            description: "Failed to generate timeline. Please try again.",
+          });
+          return;
+        }
 
-          if (chats.length > 0) {
-            setSelectedChatId(chats[0].id);
-          }
-        } else {
-          // Otherwise generate new timeline
-          const { object, error } = await generateVideoTimeline(videoId);
-
-          if (error || !object) {
-            toast.error("Error", {
-              description: "Failed to generate timeline. Please try again.",
-            });
-            return;
-          }
-
-          for await (const partialObject of readStreamableValue(object)) {
-            if (partialObject.timeline) {
-              setIsLoading(false);
-              setVideoTitle(partialObject.title);
-              setTimeline(partialObject.timeline);
-            }
-          }
-
-          await saveToHistory({
-            videoId,
-            title: videoTitle,
-            timestamp: new Date().toISOString(),
-            timeline: timeline,
+        if (details && duration && title) {
+          setNewVideo({
+            id: videoId,
+            title,
+            details,
+            duration,
+            url: `https://www.youtube.com/watch?v=${videoId}`,
           });
         }
-      } catch (error) {
-        toast.error("Error", {
-          description: "Failed to generate timeline. Please try again.",
-        });
-      }
-    };
 
+        // Procesamos la respuesta streaming
+        for await (const partialObject of readStreamableValue(object)) {
+          if (partialObject.timeline) {
+            setIsLoading(false);
+            setTimeline(partialObject.timeline);
+            setNewVideo((prev) => ({
+              ...prev,
+              timeline: partialObject.timeline,
+            }));
+          }
+        }
+      }
+    } catch (error) {
+      toast.error("Error", {
+        description: "Failed to generate timeline. Please try again.",
+      });
+    } finally {
+      setFinished(true);
+    }
+  };
+
+  const handleSaveToHistory = async (newVideo: NewVideo) => {
+    await saveToHistory(newVideo);
+  };
+
+  // Efecto para manejar la actualización de la línea de tiempo
+  useEffect(() => {
+    if (finished && !existingVideo && newVideo) {
+      handleSaveToHistory(newVideo);
+    }
+  }, [finished]);
+
+  useEffect(() => {
     fetchData();
   }, [videoId]);
 
+  // Manejadores de eventos para la línea de tiempo
   const handleTimeUpdate = (time: number) => {
     setCurrentTime(time);
   };
@@ -109,17 +135,21 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
     setCurrentTime(time);
   };
 
+  // Renderizado del componente
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Título del video */}
       <div className="mb-6">
         {isLoading ? (
           <Skeleton className="mb-2 h-10 w-3/4" />
         ) : (
-          <h1 className="font-bold text-2xl">{videoTitle}</h1>
+          <h1 className="font-bold text-2xl">{newVideo?.title}</h1>
         )}
       </div>
 
+      {/* Layout principal */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Columna principal con reproductor y pestañas */}
         <div className="lg:col-span-2">
           <VideoPlayer
             videoId={videoId}
@@ -127,6 +157,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
             onTimeUpdate={handleTimeUpdate}
           />
 
+          {/* Pestañas de Timeline y Chat */}
           <div className="mt-6">
             <Tabs defaultValue="timeline">
               <TabsList className="w-full">
@@ -154,22 +185,15 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
               </TabsContent>
               <TabsContent value="chat" className="mt-4">
                 <VideoChat
-                  videoId={videoId}
-                  videoTitle={videoTitle}
-                  timeline={timeline}
-                  chatId={selectedChatId}
-                  initialMessages={
-                    selectedChatId && chatHistory.length > 0
-                      ? chatHistory.find((chat) => chat.id === selectedChatId)
-                          ?.messages || []
-                      : []
-                  }
+                  video={existingVideo || newVideo}
+                  chatId={existingVideo?.chatId}
                 />
               </TabsContent>
             </Tabs>
           </div>
         </div>
 
+        {/* Barra lateral con línea de tiempo compacta */}
         <div className="hidden lg:block">
           <div className="rounded-lg p-4 shadow-md">
             <h2 className="mb-4 font-semibold text-lg">Video Timeline</h2>
