@@ -2,9 +2,15 @@ import type { User } from "@/prisma/generated";
 import type { NavItem } from "@/shared/types/nav";
 
 const adminNavItems: NavItem[] = [
-  { name: "Users", href: "/admin/users" },
-  { name: "Videos", href: "/admin/videos" },
-  { name: "Chat", href: "/admin/chats" },
+  {
+    name: "Admin",
+    href: "/admin",
+    children: [
+      { name: "Users", href: "/admin/users" },
+      { name: "Videos", href: "/admin/videos" },
+      { name: "Chat", href: "/admin/chats" },
+    ],
+  },
 ];
 
 const userNavItems: NavItem[] = [
@@ -37,11 +43,14 @@ export async function getNavItems(currentUser: User | null) {
 
   if (currentUser) {
     if (currentUser.roleUser === "ADMIN") {
-      navItems = adminNavItems;
+      // Admin users see all navigation items
+      navItems = [...guestNavItems, ...userNavItems, ...adminNavItems];
     } else {
-      navItems = userNavItems;
+      // Logged in non-admin users see user and guest navigation items
+      navItems = [...userNavItems, ...guestNavItems];
     }
   } else {
+    // Non-logged in users only see guest navigation items
     navItems = guestNavItems;
   }
 

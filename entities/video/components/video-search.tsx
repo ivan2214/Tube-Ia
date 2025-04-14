@@ -57,7 +57,7 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
           chatear sobre su contenido.
           <Badge
             variant={hasApiKey ? "default" : "destructive"}
-            className="mt-2"
+            className="mt-2 whitespace-normal break-normal"
           >
             Necesitas una clave API de Google para usar esta funcionalidad.
           </Badge>
