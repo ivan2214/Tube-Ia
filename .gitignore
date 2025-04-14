@@ -44,4 +44,4 @@ yarn-error.log*
 next-env.d.ts
 
 #Ignorar carpeta prisma/generated para no subirla a github
-#/prisma/generated
+/prisma/generated
