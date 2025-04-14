@@ -2,6 +2,7 @@ import { getHistory } from "@/entities/history/actions/history-action";
 import { ClientHistory } from "./client";
 import Link from "next/link";
 import { Button } from "@/shared/components/ui/button";
+import Container from "@/shared/components/container";
 
 export default async function HistoryPage() {
   const history = await getHistory();
@@ -21,8 +22,8 @@ export default async function HistoryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Container>
       <ClientHistory videos={history.videos} />
-    </div>
+    </Container>
   );
 }
