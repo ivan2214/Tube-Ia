@@ -19,8 +19,16 @@ export default async function Navbar() {
     <header className="container mx-auto border-b">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="font-bold text-xl">
-            YouTube AI Timeline
+          <Link
+            href="/"
+            className="flex items-center gap-x-2 font-bold text-xl"
+          >
+            <img
+              src="/tube-ia-logo.webp"
+              alt="Logo"
+              className="h-15 w-15 rounded-full"
+            />
+            Tube Ia
           </Link>
 
           {/* Desktop Navigation */}

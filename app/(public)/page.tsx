@@ -20,8 +20,8 @@ export default async function HomePage() {
           <h2 className="mb-4 font-semibold text-xl">Cómo funciona</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="rounded-lg p-6 shadow-md">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <Link className="text-blue-600" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                <Link className="text-red-600" />
               </div>
               <h3 className="mb-2 font-medium">1. Pegar URL de YouTube</h3>
               <p className="text-gray-600 text-sm">
@@ -30,8 +30,8 @@ export default async function HomePage() {
             </div>
 
             <div className="rounded-lg p-6 shadow-md">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <Brain className="text-blue-600" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                <Brain className="text-red-600" />
               </div>
               <h3 className="mb-2 font-medium">
                 2. La IA Genera la Línea de Tiempo
@@ -42,8 +42,8 @@ export default async function HomePage() {
             </div>
 
             <div className="rounded-lg p-6 shadow-md">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <MessageCircle className="text-blue-600" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                <MessageCircle className="text-red-600" />
               </div>
               <h3 className="mb-2 font-medium">3. Chatea Sobre el Contenido</h3>
               <p className="text-gray-600 text-sm">
