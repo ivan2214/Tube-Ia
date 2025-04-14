@@ -1,4 +1,4 @@
-# YouTube Generator Timeline AI
+# Tube Ia
 
 Una aplicación potenciada por IA que genera automáticamente líneas de tiempo y resúmenes de videos de YouTube, facilitando la navegación y comprensión del contenido.
 
