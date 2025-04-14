@@ -96,9 +96,9 @@ export const AuthButtons: React.FC<AuthButtonsProps> = ({
   return (
     <div className="flex flex-col gap-5 p-2 md:flex-row md:gap-2">
       <Button variant="outline" onClick={() => setLoginModalOpen(true)}>
-        Sign In
+        Iniciar sesión
       </Button>
-      <Button onClick={() => setRegisterModalOpen(true)}>Register</Button>
+      <Button onClick={() => setRegisterModalOpen(true)}>Registrarse</Button>
     </div>
   );
 };
