@@ -63,7 +63,7 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-2">
-                <div className="mb-3 aspect-video overflow-hidden rounded-md bg-gray-100">
+                <div className="mb-3 aspect-video overflow-hidden rounded-lg">
                   <img
                     src={`https://img.youtube.com/vi/${entry.id}/mqdefault.jpg`}
                     alt={entry.title}
