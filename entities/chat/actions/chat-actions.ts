@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import type { Prisma } from "@/prisma/generated";
 import { getCurrentUser } from "@/shared/hooks/current-user";
 import type { Message } from "@ai-sdk/react";
 
@@ -38,7 +39,7 @@ export async function saveChat({
     if (!videoId) {
       throw new Error("Video ID is required");
     }
-    const newChat = await createChat(videoId);
+    const newChat = await createChat(videoId, messages);
     return newChat;
   } catch (error) {
     console.error("Error saving chat:", error);
@@ -46,11 +47,11 @@ export async function saveChat({
   }
 }
 
-export async function createChat(videoId: string) {
+export async function createChat(videoId: string, messages: Message[]) {
   try {
     const newChat = await db.chat.create({
       data: {
-        messages: JSON.stringify([]),
+        messages: messages as unknown as Prisma.JsonArray,
         video: {
           connect: {
             id: videoId,
@@ -91,7 +92,7 @@ export async function updateChat(
         videoId,
       },
       data: {
-        messages: JSON.stringify(messages),
+        messages: messages as unknown as Prisma.JsonArray,
       },
     });
     return updatedChat;

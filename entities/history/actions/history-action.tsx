@@ -33,7 +33,6 @@ export async function saveToHistory({
 
     if (!existingHistory) {
       // si no existe creamos uno nuevo
-      console.log("Creando historial");
 
       const history = await db.history.create({
         data: {
@@ -88,8 +87,6 @@ export async function saveToHistory({
       },
     });
   } catch (error) {
-    console.log("Error", error);
-
     console.error("Error saving to history:", error);
   }
 }

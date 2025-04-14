@@ -15,7 +15,7 @@ import { VideoMessageInput } from "./video-message-input";
 import { type Message, useChat } from "@ai-sdk/react";
 import type { VideoWithRelations } from "../actions/video-db";
 import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
-import { saveChat } from "@/entities/chat/actions/chat-actions";
+import { generateId } from "ai";
 
 interface VideoChatProps {
   video: (VideoWithRelations | NewVideo) | null;
@@ -30,8 +30,12 @@ export function VideoChat({
 }: VideoChatProps) {
   const { title: videoTitle, timeline, id: videoId } = video || {};
 
+  const idChat = chatId || generateId();
+
   const { messages } = useChat({
-    id: chatId || "chat",
+    id: idChat,
+    api: "/api/chat",
+    experimental_throttle: 50,
     initialMessages:
       initialMessages.length > 0
         ? initialMessages
@@ -42,14 +46,6 @@ export function VideoChat({
               content: `¡Hola! Soy tu asistente de IA para "${videoTitle}". Pregúntame cualquier cosa sobre este video y te ayudaré a entender mejor su contenido.`,
             },
           ],
-    async onResponse(response) {
-      if (response) {
-        await saveChat({
-          messages,
-          videoId,
-        });
-      }
-    },
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -106,7 +102,12 @@ export function VideoChat({
       </ScrollArea>
 
       <div className="border-t p-4">
-        <VideoMessageInput timeline={timeline} videoId={videoId} />
+        <VideoMessageInput
+          messages={messages}
+          chatId={idChat}
+          timeline={timeline}
+          videoId={videoId}
+        />
       </div>
     </div>
   );

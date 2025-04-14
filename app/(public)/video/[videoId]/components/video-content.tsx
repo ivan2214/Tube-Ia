@@ -24,7 +24,7 @@ import {
 } from "@/entities/video/actions/video-db";
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { saveToHistory } from "@/entities/history/actions/history-action";
-import { generateId } from "ai";
+import { generateId, type Message } from "ai";
 
 // Definimos la interfaz para las props del componente
 interface VideoContentProps {
@@ -67,8 +67,6 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
       const { video: existingVideo } = await getVideoById(videoId);
 
       if (existingVideo) {
-        console.log("existingVideo", existingVideo);
-
         setExistingVideo(existingVideo);
         setIsLoading(false);
       } else {
@@ -190,6 +188,9 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
                 <VideoChat
                   video={existingVideo || newVideo}
                   chatId={existingVideo?.chat?.id || generateId()}
+                  initialMessages={
+                    existingVideo?.chat?.messages as unknown as Message[]
+                  }
                 />
               </TabsContent>
             </Tabs>

@@ -6,8 +6,6 @@ import { Button } from "@/shared/components/ui/button";
 export default async function HistoryPage() {
   const history = await getHistory();
 
-  console.log(history);
-
   if (!history || !history.videos || history.videos.length === 0) {
     return (
       <div className="py-12 text-center">

@@ -35,7 +35,6 @@ export async function getVideoById(
 
     return { video };
   } catch (error) {
-    console.log("[GET_VIDEO_BY_ID]", error);
     return {
       video: null,
     };

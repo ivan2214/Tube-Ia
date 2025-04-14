@@ -35,8 +35,6 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
     }
   };
 
-  console.log("videos", videos);
-
   return (
     <>
       <PageHeader
