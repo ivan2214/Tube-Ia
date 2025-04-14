@@ -14,13 +14,6 @@ export async function getAllUsers() {
     }
 
     const users = await db.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        roleUser: true,
-        createdAt: true,
-      },
       orderBy: {
         createdAt: "desc",
       },

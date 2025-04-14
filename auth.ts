@@ -85,6 +85,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    signIn: async ({ user }) => {
+      if (!user?.id) return;
+
+      await db.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      });
+    },
+  },
   session: {
     strategy: "jwt",
   },

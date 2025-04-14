@@ -25,12 +25,12 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
     try {
       await clearHistory();
 
-      toast.success("Success", {
-        description: "History cleared successfully",
+      toast.success("Éxito", {
+        description: "Historial borrado exitosamente",
       });
     } catch (error) {
       toast.error("Error", {
-        description: "Failed to clear history",
+        description: "Error al borrar el historial",
       });
     }
   };
@@ -38,15 +38,15 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
   return (
     <>
       <PageHeader
-        title="History"
-        description="Your previously analyzed videos"
+        title="Historial"
+        description="Tus videos analizados previamente"
         action={
           <Button
             variant="outline"
             onClick={handleClearHistory}
             disabled={videos?.length === 0}
           >
-            Clear History
+            Borrar Historial
           </Button>
         }
       />
@@ -69,13 +69,13 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
                   />
                 </div>
                 <p className="text-gray-500 text-sm">
-                  {formatDistanceToNow(new Date(entry.createdAt))} ago
+                  hace {formatDistanceToNow(new Date(entry.createdAt))}
                 </p>
               </CardContent>
               <CardFooter>
                 <Link href={`/video/${entry.id}`} className="w-full">
                   <Button variant="outline" className="w-full">
-                    View Video
+                    Ver video
                   </Button>
                 </Link>
               </CardFooter>

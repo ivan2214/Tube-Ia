@@ -34,13 +34,15 @@ export default async function ProfilePage() {
 
   return (
     <Container>
-      <h1 className="mb-6 font-bold text-3xl">Your Profile</h1>
+      <h1 className="mb-6 font-bold text-3xl">Tu Perfil</h1>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>Update your account information</CardDescription>
+            <CardTitle>Información del Perfil</CardTitle>
+            <CardDescription>
+              Actualiza la información de tu cuenta
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ProfileForm user={user} />
@@ -49,33 +51,33 @@ export default async function ProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Account Details</CardTitle>
+            <CardTitle>Detalles de la Cuenta</CardTitle>
             <CardDescription>
-              Your account information and settings
+              Tu información y configuración de cuenta
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-1">
               <div className="font-medium text-muted-foreground text-sm">
-                Account ID
+                ID de Cuenta
               </div>
               <div className="truncate text-sm">{user.id}</div>
             </div>
             <div className="grid grid-cols-2 gap-1">
               <div className="font-medium text-muted-foreground text-sm">
-                Email
+                Correo
               </div>
               <div className="text-sm">{user.email}</div>
             </div>
             <div className="grid grid-cols-2 gap-1">
               <div className="font-medium text-muted-foreground text-sm">
-                Role
+                Rol
               </div>
               <div className="text-sm capitalize">{user.roleUser}</div>
             </div>
             <div className="grid grid-cols-2 gap-1">
               <div className="font-medium text-muted-foreground text-sm">
-                Member Since
+                Miembro Desde
               </div>
               <div className="text-sm">
                 {new Date(user.createdAt).toLocaleDateString()}
@@ -84,9 +86,32 @@ export default async function ProfilePage() {
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" className="w-full">
-              Download Your Data
+              Descargar tus Datos
             </Button>
           </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Actividad</CardTitle>
+            <CardDescription>Tu actividad reciente</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex justify-between">
+                <span>Último inicio de sesión</span>
+                <span className="text-muted-foreground">Hoy, 10:30 AM</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Cuenta creada</span>
+                <span className="text-muted-foreground">
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </span>
+              </li>
+            </ul>
+          </CardContent>
         </Card>
       </div>
     </Container>

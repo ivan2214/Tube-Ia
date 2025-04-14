@@ -38,20 +38,20 @@ export default async function AdminPage() {
 
   return (
     <Container>
-      <h1 className="mb-6 font-bold text-3xl">Admin Dashboard</h1>
+      <h1 className="mb-6 font-bold text-3xl">Panel de Administración</h1>
       <Tabs defaultValue="users">
         <TabsList className="mb-4">
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="products">Productos</TabsTrigger>
+          <TabsTrigger value="settings">Configuración</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle>User Management</CardTitle>
+              <CardTitle>Gestión de Usuarios</CardTitle>
               <CardDescription>
-                Manage user accounts and permissions
+                Administrar cuentas y permisos de usuarios
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -63,11 +63,13 @@ export default async function AdminPage() {
         <TabsContent value="products">
           <Card>
             <CardHeader>
-              <CardTitle>Product Management</CardTitle>
-              <CardDescription>Manage products and inventory</CardDescription>
+              <CardTitle>Gestión de Productos</CardTitle>
+              <CardDescription>
+                Administrar productos e inventario
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Product management content goes here</p>
+              <p>Aquí va el contenido de gestión de productos</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -75,11 +77,11 @@ export default async function AdminPage() {
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>Admin Settings</CardTitle>
-              <CardDescription>Configure system settings</CardDescription>
+              <CardTitle>Configuración de Administrador</CardTitle>
+              <CardDescription>Configurar ajustes del sistema</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Settings content goes here</p>
+              <p>Aquí va el contenido de configuración</p>
             </CardContent>
           </Card>
         </TabsContent>

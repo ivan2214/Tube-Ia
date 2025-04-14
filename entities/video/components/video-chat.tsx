@@ -89,7 +89,7 @@ export function VideoChat({
                   </div>
                 </Card>
                 {message.role === "user" && (
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 rounded-full">
                     <AvatarFallback>You</AvatarFallback>
                     <AvatarImage src="/placeholder.svg?height=32&width=32" />
                   </Avatar>
