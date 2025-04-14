@@ -55,7 +55,10 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
         <CardDescription>
           Ingresa una URL o ID de YouTube para generar una línea de tiempo y
           chatear sobre su contenido.
-          <Badge className="mt-2">
+          <Badge
+            variant={hasApiKey ? "default" : "destructive"}
+            className="mt-2"
+          >
             Necesitas una clave API de Google para usar esta funcionalidad.
           </Badge>
         </CardDescription>
@@ -72,7 +75,7 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
             />
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
-          <Button type="submit" className="w-full">
+          <Button disabled={!hasApiKey} type="submit" className="w-full">
             Generar Línea de Tiempo y chatear
           </Button>
         </form>
