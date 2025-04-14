@@ -4,6 +4,7 @@ import { getApiKey } from "@/shared/actions/api-key-actions";
 import { formatTime } from "@/shared/utils/format-time";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
+import { NextResponse } from "next/server";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -14,10 +15,10 @@ export async function POST(req: Request) {
   const { apiKey } = await getApiKey();
 
   if (!apiKey) {
-    return {
-      object: null,
-      error: "API_KEY_REQUIRED",
-    };
+    return NextResponse.json({
+      error: "No API key found",
+      success: false,
+    });
   }
 
   // Initialize Google AI with the user's API key
