@@ -21,6 +21,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "YouTube Video Timeline Generator",
   description: "Generate a timeline of topics discussed in YouTube videos",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+    ],
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+      },
+    ],
+    shortcut: ["/favicon.ico"],
+  },
 };
 
 export default function RootLayout({

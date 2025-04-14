@@ -78,9 +78,7 @@ export async function getVideoDetails(videoId: string): Promise<VideoDetails> {
 export async function getVideoTranscript(videoId: string): Promise<string> {
   try {
     const transcript: TranscriptResponse[] =
-      await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: "es", // Ensure English transcript if available
-      });
+      await YoutubeTranscript.fetchTranscript(videoId);
 
     if (!transcript || transcript.length === 0) {
       throw new Error("No transcript available for this video");
