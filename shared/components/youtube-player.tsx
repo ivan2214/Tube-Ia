@@ -21,7 +21,6 @@ export default function YouTubePlayer({
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load YouTube API
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     // Only load the API once
     if (!document.getElementById("youtube-api-script")) {
@@ -96,13 +95,13 @@ export default function YouTubePlayer({
         enablejsapi: 1,
       },
       events: {
-        onReady: (event) => {
+        onReady: (event: YT.PlayerEvent) => {
           setIsLoading(false);
           if (onPlayerReady) {
             onPlayerReady(event.target);
           }
         },
-        onStateChange: (event) => {
+        onStateChange: (event: YT.OnStateChangeEvent) => {
           // Start time update interval when playing
           if (event.data === window.YT.PlayerState.PLAYING) {
             if (timeUpdateIntervalRef.current) {

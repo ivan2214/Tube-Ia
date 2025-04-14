@@ -74,6 +74,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/youtube": "^0.1.0",
+    "@types/youtube-player": "^5.5.11",
     "prisma": "^6.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
