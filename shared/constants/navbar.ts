@@ -18,7 +18,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 const userNavItems: NavItem[] = [
-  { name: "Profile", href: "/profile" },
+  { name: "Perfil", href: "/profile" },
   { name: "Historial", href: "/history" },
 ];
 
@@ -42,16 +42,18 @@ const guestNavItems: NavItem[] = [
   },
 ];
 
+export const desktopItems: NavItem[] = guestNavItems;
+
 export async function getNavItems(currentUser: User | null) {
   let navItems: NavItem[] = [];
 
   if (currentUser) {
     if (currentUser.roleUser === "ADMIN") {
       // Admin users see all navigation items
-      navItems = [...guestNavItems, ...userNavItems, ...adminNavItems];
+      navItems = [...userNavItems, ...adminNavItems];
     } else {
       // Logged in non-admin users see user and guest navigation items
-      navItems = [...userNavItems, ...guestNavItems];
+      navItems = [...userNavItems];
     }
   } else {
     // Non-logged in users only see guest navigation items

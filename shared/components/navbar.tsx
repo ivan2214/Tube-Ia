@@ -8,7 +8,7 @@ import { AuthButtons } from "@/entities/auth/components/auth-buttons";
 import { DesktopMenu } from "@/shared/components/desktop-menu";
 import { getApiKey } from "../actions/api-key-actions";
 import { ApiKeyButton } from "./api-key-button";
-import { getNavItems } from "../constants/navbar";
+import { desktopItems, getNavItems } from "../constants/navbar";
 
 export default async function Navbar() {
   const { currentUser } = await getCurrentUser();
@@ -35,7 +35,7 @@ export default async function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <DesktopMenu navItems={navItems} />
+          <DesktopMenu navItems={desktopItems} />
         </div>
 
         <div className="flex items-center gap-0 p-2 md:gap-x-3 md:p-0">

@@ -90,6 +90,29 @@ export default async function ProfilePage() {
             </Button>
           </CardFooter>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Actividad</CardTitle>
+            <CardDescription>Tu actividad reciente</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex justify-between">
+                <span>Último inicio de sesión</span>
+                <span className="text-muted-foreground">Hoy, 10:30 AM</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Cuenta creada</span>
+                <span className="text-muted-foreground">
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </Container>
   );
