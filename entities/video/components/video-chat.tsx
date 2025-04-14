@@ -12,28 +12,30 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { MemoizedMarkdown } from "@/shared/components/memoized-markdown";
 import { VideoMessageInput } from "./video-message-input";
 
-import type { TimelineEntry } from "@/entities/timeline/types";
 import { type Message, useChat } from "@ai-sdk/react";
+import type { VideoWithRelations } from "../actions/video-db";
+import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
+import { generateId } from "ai";
 
 interface VideoChatProps {
-  videoId: string;
-  videoTitle: string;
-  timeline: TimelineEntry[];
-  chatId?: string;
+  video: (VideoWithRelations | NewVideo) | null;
+  chatId?: string | null;
   initialMessages?: Message[];
 }
 
 export function VideoChat({
-  videoId,
-  videoTitle,
-  timeline,
+  video,
   chatId,
   initialMessages = [],
 }: VideoChatProps) {
-  console.log("VideoChat");
+  const { title: videoTitle, timeline, id: videoId } = video || {};
+
+  const idChat = chatId || generateId();
 
   const { messages } = useChat({
-    id: chatId || "chat",
+    id: idChat,
+    api: "/api/chat",
+    experimental_throttle: 50,
     initialMessages:
       initialMessages.length > 0
         ? initialMessages
@@ -100,7 +102,12 @@ export function VideoChat({
       </ScrollArea>
 
       <div className="border-t p-4">
-        <VideoMessageInput timeline={timeline} videoId={videoId} />
+        <VideoMessageInput
+          messages={messages}
+          chatId={idChat}
+          timeline={timeline}
+          videoId={videoId}
+        />
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { extractVideoId } from "@/shared/utils/youtube-utils";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/shared/components/ui/badge";
 
 interface VideoSearchProps {
@@ -42,9 +42,10 @@ export function VideoSearch({ hasApiKey }: VideoSearchProps) {
 
     onSubmit(videoId);
   };
+  const router = useRouter();
 
   const onSubmit = (videoId: string) => {
-    redirect(`/video/${videoId}`);
+    router.push(`/video/${videoId}`);
   };
 
   return (

@@ -90,20 +90,6 @@ ${transcript}
 - Asegúrate de que las marcas de tiempo estén bien sincronizadas con el contenido del video.
 - El formato debe coincidir exactamente con el esquema JSON esperado.
 - Siempre responde en **español**.
-
-📌 Ejemplo de formato de salida:
-[
-  {
-    "time": 15,
-    "title": "Inicio del video",
-    "description": "El presentador se presenta y explica el objetivo del video."
-  },
-  {
-    "time": 105,
-    "title": "Primer tema importante",
-    "description": "Se comienza a explicar el primer punto clave con ejemplos."
-  }
-]
       `,
     });
 
@@ -123,5 +109,7 @@ ${transcript}
   return {
     object: stream.value,
     title: videoDetails.title,
+    duration: videoDetails.duration,
+    details: transcript,
   };
 }

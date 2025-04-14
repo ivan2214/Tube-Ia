@@ -21,7 +21,6 @@ model User {
   accounts Account[]
   sessions Session[]
   history  History[]
-  chats    Chat[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -71,21 +70,42 @@ model VerificationToken {
 }
 
 model History {
-  id        String   @id @default(cuid())
-  videoId   String
-  title     String
+  id String @id @default(cuid())
+
   timestamp DateTime @default(now())
 
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
-  timeline Timeline[]
-  chats    Chat[]
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  videos Video[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, videoId])
+  @@unique([userId])
   @@index([userId])
+}
+
+model Video {
+  id       String @id @unique
+  title    String
+  details  String @db.Text
+  duration Float
+  url      String
+
+  history   History @relation(fields: [historyId], references: [id], onDelete: Cascade)
+  historyId String
+
+  timeline Timeline[]
+
+  // un video puede tener un chat asociado o no
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chat Chat?
+
+  @@index([historyId])
 }
 
 model Timeline {
@@ -94,30 +114,24 @@ model Timeline {
   title       String
   description String @db.Text
 
-  history   History @relation(fields: [historyId], references: [id], onDelete: Cascade)
-  historyId String
+  video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([historyId])
+  @@index([videoId])
 }
 
 model Chat {
   id       String @id @default(cuid())
   messages Json   @db.JsonB
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  history   History? @relation(fields: [historyId], references: [id], onDelete: SetNull)
-  historyId String?
+  video   Video? @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([historyId])
 }
 
 enum RoleUser {

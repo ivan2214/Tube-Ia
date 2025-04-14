@@ -1,10 +1,10 @@
-import { TimelineEntryItem } from "./video-timeline-entry-item";
 import type { TimelineEntry } from "@/entities/timeline/types";
+import { TimelineEntryItem } from "./video-timeline-entry-item";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { motion } from "framer-motion";
 
 interface VideoTimelineProps {
-  timeline: TimelineEntry[];
+  timeline?: TimelineEntry[] | null;
   currentTime: number;
   onTimeClick: (time: number) => void;
   compact?: boolean;
@@ -16,6 +16,10 @@ export function VideoTimeline({
   onTimeClick,
   compact = false,
 }: VideoTimelineProps) {
+  if (!timeline) {
+    return null;
+  }
+
   const isActive = (entry: TimelineEntry): boolean => {
     const nextEntryIndex = timeline.findIndex((t) => t.time > entry.time);
     const nextEntryTime =

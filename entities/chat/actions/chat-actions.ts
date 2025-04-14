@@ -2,87 +2,142 @@
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import type { Prisma } from "@/prisma/generated";
 import { getCurrentUser } from "@/shared/hooks/current-user";
 import type { Message } from "@ai-sdk/react";
 
 export async function saveChat({
   messages,
   videoId,
+  chatId,
 }: {
   messages: Message[];
   videoId?: string;
-}): Promise<{ id: string | null }> {
+  chatId?: string;
+}) {
   try {
-    console.log("saveChat");
-
     const { currentUser } = await getCurrentUser();
 
     if (!currentUser) {
       throw new Error("Unauthorized");
     }
 
-    console.log("messages", messages);
-    console.log("videoId", videoId);
-
-    let historyId: string | null = null;
-
-    // If videoId is provided, find the history entry
-    if (videoId) {
-      const history = await db.history.findUnique({
-        where: {
-          userId_videoId: {
-            userId: currentUser.id,
-            videoId: videoId,
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (history) {
-        historyId = history.id;
-      }
-    }
-
-    let idChat: string | null = null;
-
-    const existingChat = await db.chat.findFirst({
+    const chat = await db.chat.findUnique({
       where: {
-        userId: currentUser.id,
-        historyId: historyId,
-      },
-      orderBy: {
-        createdAt: "desc",
+        id: chatId,
+        videoId,
       },
     });
 
-    if (existingChat) {
-      // Update the existing chat
-      const updatedChat = await db.chat.update({
-        where: {
-          id: existingChat.id,
-        },
-        data: {
-          messages: JSON.stringify(messages),
-        },
-      });
-      idChat = updatedChat.id;
-    } else {
-      // Create a new chat
-      const createdChat = await db.chat.create({
-        data: {
-          userId: currentUser.id,
-          messages: JSON.stringify(messages),
-          historyId: historyId,
-        },
-      });
-      idChat = createdChat.id;
+    // si ya existe un chat para el video, lo actualizamos
+    if (chat && chat.videoId === videoId) {
+      const updatedChat = await updateChat(chat.id, messages, videoId);
+      return updatedChat;
     }
 
-    return { id: idChat };
+    // si no existe un chat para el video, lo creamos
+    if (!videoId) {
+      throw new Error("Video ID is required");
+    }
+    const newChat = await createChat(videoId, messages);
+    return newChat;
   } catch (error) {
     console.error("Error saving chat:", error);
+    throw error;
+  }
+}
+
+export async function createChat(videoId: string, messages: Message[]) {
+  try {
+    const newChat = await db.chat.create({
+      data: {
+        messages: messages as unknown as Prisma.JsonArray,
+        video: {
+          connect: {
+            id: videoId,
+          },
+        },
+      },
+    });
+    return newChat;
+  } catch (error) {
+    console.error("Error creating chat:", error);
+    throw error;
+  }
+}
+
+export async function updateChat(
+  chatId: string,
+  messages: Message[],
+  videoId: string
+) {
+  try {
+    const { currentUser } = await getCurrentUser();
+
+    if (!currentUser) {
+      throw new Error("Unauthorized");
+    }
+    const chat = await db.chat.findUnique({
+      where: {
+        id: chatId,
+      },
+    });
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+
+    const updatedChat = await db.chat.update({
+      where: {
+        id: chatId,
+        videoId,
+      },
+      data: {
+        messages: messages as unknown as Prisma.JsonArray,
+      },
+    });
+    return updatedChat;
+  } catch (error) {
+    console.error("Error updating chat:", error);
+    throw error;
+  }
+}
+
+export async function deleteChat(chatId: string) {
+  try {
+    const { currentUser } = await getCurrentUser();
+
+    if (!currentUser) {
+      throw new Error("Unauthorized");
+    }
+
+    const chat = await db.chat.findUnique({
+      where: {
+        id: chatId,
+      },
+      select: {
+        video: {
+          select: {
+            history: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!chat || chat.video?.history?.userId !== currentUser.id) {
+      throw new Error("Unauthorized");
+    }
+
+    await db.chat.delete({
+      where: {
+        id: chatId,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting chat:", error);
     throw error;
   }
 }
@@ -101,14 +156,6 @@ export async function getChat(chatId: string): Promise<{
     const chat = await db.chat.findFirst({
       where: {
         id: chatId,
-        userId: session.user.id,
-      },
-      include: {
-        history: {
-          select: {
-            videoId: true,
-          },
-        },
       },
     });
 
@@ -118,65 +165,9 @@ export async function getChat(chatId: string): Promise<{
 
     return {
       messages: chat.messages as unknown as Message[],
-      videoId: chat.history?.videoId,
     };
   } catch (error) {
     console.error("Error getting chat:", error);
     return null;
-  }
-}
-
-export async function getChatsByVideoId(videoId: string): Promise<
-  {
-    id: string;
-    messages: Message[];
-    createdAt: Date;
-  }[]
-> {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return [];
-    }
-
-    const history = await db.history.findUnique({
-      where: {
-        userId_videoId: {
-          userId: session.user.id,
-          videoId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!history) {
-      return [];
-    }
-
-    const chats = await db.chat.findMany({
-      where: {
-        historyId: history.id,
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    if (!chats) {
-      return [];
-    }
-
-    return chats.map((chat) => ({
-      id: chat.id,
-      messages: chat.messages as unknown as Message[],
-      createdAt: chat.createdAt,
-    }));
-  } catch (error) {
-    console.error("Error getting chats by video ID:", error);
-    return [];
   }
 }

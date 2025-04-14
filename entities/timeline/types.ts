@@ -1,5 +1,6 @@
-export interface TimelineEntry {
-  time: number;
-  title: string;
-  description: string;
-}
+import type { Timeline } from "@/prisma/generated";
+
+export type TimelineEntry = Omit<
+  Timeline,
+  "createdAt" | "updatedAt" | "videoId" | "id"
+>;
