@@ -8,6 +8,7 @@ import { Loader, Send } from "lucide-react";
 
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { saveChat } from "@/entities/chat/actions/chat-actions";
+import { generateId } from "ai";
 
 export const VideoMessageInput = ({
   videoId,
@@ -29,20 +30,29 @@ export const VideoMessageInput = ({
     },
     experimental_throttle: 50,
     onFinish: async (message) => {
-      const oldMessages = messages.map((message) => ({
+      // Get all existing messages
+      const oldMessages = messages.map((msg) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      // Create a user message with the current input
+      const userMessage = {
+        id: `msg-${generateId()}`,
+        role: "user" as const,
+        content: input,
+      };
+
+      // Create the AI response message
+      const aiMessage = {
         id: message.id,
         role: message.role,
         content: message.content,
-      }));
+      };
 
-      const newMessages = [
-        ...oldMessages,
-        {
-          id: message.id,
-          role: message.role,
-          content: message.content,
-        },
-      ];
+      // Combine all messages, ensuring both user input and AI response are included
+      const newMessages = [...oldMessages, userMessage, aiMessage];
 
       await saveChat({
         messages: newMessages,
