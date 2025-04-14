@@ -5,12 +5,26 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/shared/components/ui/button";
-import { navItems } from "@/shared/constants/navbar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
 
-export const MobileMenu = () => {
+import { AuthButtons } from "@/entities/auth/components/auth-buttons";
+
+import type { NavItem } from "../types/nav";
+import type { User } from "@/prisma/generated";
+
+interface MobileMenuProps {
+  navItems: NavItem[];
+  currentUser: User | null;
+}
+
+export const MobileMenu = ({ navItems, currentUser }: MobileMenuProps) => {
   return (
     <Sheet>
       <SheetTrigger asChild className="lg:hidden">
@@ -19,23 +33,33 @@ export const MobileMenu = () => {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-        <nav className="mt-8 flex flex-col gap-4">
+      <SheetContent side="right" className="w-[250px] sm:w-[400px]">
+        <nav className="mt-15 flex flex-col gap-4">
           {navItems.map((item) => {
             if (item.children) {
               return (
-                <div key={`nav-item-children-${item.href}`} className="py-2">
-                  <h3 className="mb-2 font-medium text-lg">Categories</h3>
-                  {item.children.map((children) => (
-                    <Link
-                      key={children.href}
-                      href={children.href as string}
-                      className="block py-2 text-gray-600 hover:text-emerald-600"
-                    >
-                      {children.name}
-                    </Link>
-                  ))}
-                </div>
+                <Collapsible
+                  key={`nav-item-children-${item.href}`}
+                  className="w-full"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-4 py-2 text-left font-medium text-lg hover:bg-muted">
+                    {item.name}
+                    <ChevronRight className="h-5 w-5 transition-transform duration-200 [&[data-state=open]>svg]:rotate-90" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-4">
+                    <div className="flex flex-col space-y-2 py-2">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href as string}
+                          className="rounded-md px-4 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-emerald-600"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             }
 
@@ -43,17 +67,14 @@ export const MobileMenu = () => {
               <Link
                 href={item.href as string}
                 key={item.href}
-                className="font-medium text-lg"
+                className="rounded-md px-4 py-2 font-medium text-foreground transition-colors hover:bg-muted hover:text-emerald-600"
               >
                 {item.name}
               </Link>
             );
           })}
-          <div className="gapfont-medium -2 mt-4 flex flex-col">
-            <Button className="w-full">Sign In</Button>
-            <Button variant="outline" className="w-full">
-              Register
-            </Button>
+          <div className="mt-4 px-4">
+            <AuthButtons navItems={navItems} currentUser={currentUser} />
           </div>
         </nav>
       </SheetContent>

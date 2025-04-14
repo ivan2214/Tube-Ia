@@ -9,9 +9,13 @@ import {
 } from "@/shared/components/ui/navigation-menu";
 import Link from "next/link";
 import { cn } from "../lib/utils";
-import { navItems } from "@/shared/constants/navbar";
+import type { NavItem } from "../types/nav";
 
-export const DesktopMenu = ({}) => {
+interface DesktopMenuProps {
+  navItems: NavItem[];
+}
+
+export const DesktopMenu = ({ navItems }: DesktopMenuProps) => {
   return (
     <NavigationMenu className="hidden lg:flex">
       <NavigationMenuList>

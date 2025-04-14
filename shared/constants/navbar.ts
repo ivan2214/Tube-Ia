@@ -1,47 +1,49 @@
+import type { User } from "@/prisma/generated";
 import type { NavItem } from "@/shared/types/nav";
 
-export const adminNavItems: NavItem[] = [
-  {
-    name: "Dashboard",
-    href: "/admin",
-  },
-  {
-    name: "analiticas",
-    href: "/admin/analytics",
-  },
-  {
-    name: "categorias",
-    href: "/admin/categories",
-  },
-  {
-    name: "productos",
-    href: "/admin/products",
-  },
-  {
-    name: "reportes",
-    href: "/admin/reports",
-  },
-  {
-    name: "vendedores",
-    href: "/admin/sellers",
-  },
-  {
-    name: "ajustes",
-    href: "/admin/settings",
-  },
-  {
-    name: "usuarios",
-    href: "/admin/users",
-  },
+const adminNavItems: NavItem[] = [
+  { name: "Users", href: "/admin/users" },
+  { name: "Videos", href: "/admin/videos" },
+  { name: "Chat", href: "/admin/chats" },
 ];
 
-export const navItems: NavItem[] = [
+const userNavItems: NavItem[] = [
+  { name: "Profile", href: "/profile" },
+  { name: "Historial", href: "/history" },
+];
+
+const guestNavItems: NavItem[] = [
+  // para los usuarios no autenticados
   {
     name: "Inicio",
     href: "/",
   },
   {
-    name: "Historial",
-    href: "/history",
+    name: "Como obtener mi api key?",
+    href: "/how-to-get-api-key",
+  },
+  {
+    name: "Sobre Nosotros",
+    href: "/about",
+  },
+  {
+    name: "Contacto",
+    href: "/contact",
   },
 ];
+
+export async function getNavItems(currentUser: User | null) {
+  let navItems: NavItem[] = [];
+
+  if (currentUser) {
+    if (currentUser.roleUser === "ADMIN") {
+      navItems = adminNavItems;
+    } else {
+      navItems = userNavItems;
+    }
+  } else {
+    navItems = guestNavItems;
+  }
+
+  return navItems;
+}

@@ -17,7 +17,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import { adminNavItems } from "@/shared/constants/navbar";
 import { useAuth } from "@/entities/auth/hooks/use-auth";
 
 import type { User } from "@/prisma/generated";
@@ -25,9 +24,13 @@ import type { NavItem } from "@/shared/types/nav";
 
 interface AuthButtonsProps {
   currentUser: User | null;
+  navItems: NavItem[];
 }
 
-export const AuthButtons: React.FC<AuthButtonsProps> = ({ currentUser }) => {
+export const AuthButtons: React.FC<AuthButtonsProps> = ({
+  currentUser,
+  navItems,
+}) => {
   const { setLoginModalOpen, setRegisterModalOpen } = useAuth();
 
   const handleSignOut = () => {
@@ -35,14 +38,6 @@ export const AuthButtons: React.FC<AuthButtonsProps> = ({ currentUser }) => {
   };
 
   // Build navigation items based on user role
-  const navItems: NavItem[] = currentUser
-    ? [
-        { name: "Profile", href: "/profile" },
-        ...(currentUser.roleUser === "ADMIN"
-          ? [{ name: "Admin", children: adminNavItems }]
-          : []),
-      ]
-    : [];
 
   if (currentUser) {
     return (
@@ -99,8 +94,8 @@ export const AuthButtons: React.FC<AuthButtonsProps> = ({ currentUser }) => {
   }
 
   return (
-    <div className="flex gap-2">
-      <Button variant={"ghost"} onClick={() => setLoginModalOpen(true)}>
+    <div className="flex flex-col gap-5 p-2 md:flex-row md:gap-2">
+      <Button variant="outline" onClick={() => setLoginModalOpen(true)}>
         Sign In
       </Button>
       <Button onClick={() => setRegisterModalOpen(true)}>Register</Button>
