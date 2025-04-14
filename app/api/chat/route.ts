@@ -1,6 +1,7 @@
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { getVideoDetails } from "@/entities/video/actions/video-actions";
 import { getApiKey } from "@/shared/actions/api-key-actions";
+import { formatTime } from "@/shared/utils/format-time";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 
@@ -61,10 +62,4 @@ export async function POST(req: Request) {
   });
 
   return result.toDataStreamResponse();
-}
-
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }

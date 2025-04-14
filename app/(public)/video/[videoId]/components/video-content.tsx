@@ -5,7 +5,11 @@ import { VideoPlayer } from "@/entities/video/components/video-player";
 import { VideoTimeline } from "@/entities/video/components/video-timeline";
 import { VideoChat } from "@/entities/video/components/video-chat";
 import { generateVideoTimeline } from "@/entities/timeline/actions/timeline-actions";
-import { saveToHistory } from "@/entities/history/actions/history-action";
+import {
+  saveToHistory,
+  getHistoryWithTimeline,
+} from "@/entities/history/actions/history-action";
+import { getChatsByVideoId } from "@/entities/chat/actions/chat-actions";
 
 import {
   Tabs,
@@ -17,6 +21,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { toast } from "sonner";
 import { readStreamableValue } from "ai/rsc";
+import type { Message } from "ai";
 
 interface VideoContentProps {
   videoId: string;
@@ -27,34 +32,65 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [chatHistory, setChatHistory] = useState<
+    {
+      id: string;
+      messages: Message[];
+      createdAt: Date;
+    }[]
+  >([]);
+  const [selectedChatId, setSelectedChatId] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
-    const fetchTimeline = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const { object, error, title } = await generateVideoTimeline(videoId);
 
-        if (error || !object) {
-          toast.error("Error", {
-            description: "Failed to generate timeline. Please try again.",
-          });
-          return;
-        }
+        // First check if we have this video in history
+        const { history, timeline: savedTimeline } =
+          await getHistoryWithTimeline(videoId);
 
-        for await (const partialObject of readStreamableValue(object)) {
-          if (partialObject.timeline) {
-            setIsLoading(false);
-            setVideoTitle(partialObject.title);
-            setTimeline(partialObject.timeline);
+        // Get chat history for this video
+        const chats = await getChatsByVideoId(videoId);
+        setChatHistory(chats);
+
+        if (history && savedTimeline.length > 0) {
+          // If we have history, use it
+          setIsLoading(false);
+          setVideoTitle(history.title);
+          setTimeline(savedTimeline);
+
+          if (chats.length > 0) {
+            setSelectedChatId(chats[0].id);
           }
-        }
+        } else {
+          // Otherwise generate new timeline
+          const { object, error } = await generateVideoTimeline(videoId);
 
-        // Save to history
-        await saveToHistory({
-          videoId,
-          title,
-          timestamp: new Date().toISOString(),
-        });
+          if (error || !object) {
+            toast.error("Error", {
+              description: "Failed to generate timeline. Please try again.",
+            });
+            return;
+          }
+
+          for await (const partialObject of readStreamableValue(object)) {
+            if (partialObject.timeline) {
+              setIsLoading(false);
+              setVideoTitle(partialObject.title);
+              setTimeline(partialObject.timeline);
+            }
+          }
+
+          await saveToHistory({
+            videoId,
+            title: videoTitle,
+            timestamp: new Date().toISOString(),
+            timeline: timeline,
+          });
+        }
       } catch (error) {
         toast.error("Error", {
           description: "Failed to generate timeline. Please try again.",
@@ -62,8 +98,8 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
       }
     };
 
-    fetchTimeline();
-  }, [videoId, toast]);
+    fetchData();
+  }, [videoId]);
 
   const handleTimeUpdate = (time: number) => {
     setCurrentTime(time);
@@ -72,6 +108,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
   const handleTimelineClick = (time: number) => {
     setCurrentTime(time);
   };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -120,6 +157,13 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
                   videoId={videoId}
                   videoTitle={videoTitle}
                   timeline={timeline}
+                  chatId={selectedChatId}
+                  initialMessages={
+                    selectedChatId && chatHistory.length > 0
+                      ? chatHistory.find((chat) => chat.id === selectedChatId)
+                          ?.messages || []
+                      : []
+                  }
                 />
               </TabsContent>
             </Tabs>
@@ -127,7 +171,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
         </div>
 
         <div className="hidden lg:block">
-          <div className="rounded-lg bg-white p-4 shadow-md">
+          <div className="rounded-lg p-4 shadow-md">
             <h2 className="mb-4 font-semibold text-lg">Video Timeline</h2>
             {isLoading ? (
               <div className="space-y-4">

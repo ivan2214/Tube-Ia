@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#Ignorar carpeta prisma/generated para no subirla a github
+#/prisma/generated
