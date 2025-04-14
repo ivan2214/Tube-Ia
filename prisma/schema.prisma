@@ -72,7 +72,6 @@ model VerificationToken {
 model History {
   id String @id @default(cuid())
 
-  title     String
   timestamp DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

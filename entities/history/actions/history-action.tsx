@@ -26,49 +26,67 @@ export async function saveToHistory({
     const existingHistory = await db.history.findFirst({
       where: {
         userId: currentUser.id,
-        videos: {
-          some: {
-            id: id,
+      },
+    });
+
+    let historyId: string | null = null;
+
+    if (!existingHistory) {
+      // si no existe creamos uno nuevo
+      console.log("Creando historial");
+
+      const history = await db.history.create({
+        data: {
+          userId: currentUser.id,
+        },
+      });
+
+      historyId = history.id;
+    }
+
+    if (existingHistory) {
+      historyId = existingHistory.id;
+    }
+
+    // agregar los videos al historial
+
+    if (!historyId) {
+      throw new Error("No se pudo crear el historial");
+    }
+
+    if (!id || !timeline || !title || !details || !duration || !url) {
+      throw new Error("No se pudo crear el video");
+    }
+
+    // verificamos si el video ya existe
+
+    const existingVideo = await db.video.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (existingVideo) {
+      throw new Error("Video already exists");
+    }
+
+    const video = await db.video.create({
+      data: {
+        id,
+        title,
+        details,
+        duration,
+        url,
+        timeline: {
+          create: timeline,
+        },
+        history: {
+          connect: {
+            id: historyId,
           },
         },
       },
     });
-
-    console.log("existingHistory", existingHistory);
-
-    console.log("values", { id, timeline, title, details, duration, url });
-
-    if (
-      !existingHistory &&
-      id &&
-      timeline &&
-      title &&
-      details &&
-      duration &&
-      url
-    ) {
-      // si no existe creamos uno nuevo
-      console.log("Creando historial");
-
-      await db.history.create({
-        data: {
-          userId: currentUser.id,
-          videos: {
-            create: {
-              id: id,
-              title,
-              timeline: {
-                create: timeline || [],
-              },
-              details,
-              duration,
-              url,
-            },
-          },
-          title,
-        },
-      });
-    }
   } catch (error) {
     console.log("Error", error);
 
