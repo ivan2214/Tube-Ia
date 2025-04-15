@@ -20,9 +20,9 @@ export async function getVideoById(
       throw new Error("Unauthorized");
     }
 
-    const video = await db.video.findUnique({
+    const video = await db.video.findFirst({
       where: {
-        id: videoId,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
         history: {
           userId: currentUser.id,
         },
