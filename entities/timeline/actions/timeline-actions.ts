@@ -1,11 +1,9 @@
 "use server";
+
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamObject } from "ai";
 import { z } from "zod";
-import {
-  getVideoDetails,
-  getTranscriptFromScrapingSimplified,
-} from "@/entities/video/actions/video-actions";
+import { getVideoDetails } from "@/entities/video/actions/video-actions";
 import { createStreamableValue } from "ai/rsc";
 import { getApiKey } from "@/shared/actions/api-key-actions";
 
@@ -37,18 +35,12 @@ export async function generateVideoTimeline(videoId: string) {
       };
     }
 
-    // Initialize Google AI with the user's API key
-    const google = createGoogleGenerativeAI({
-      apiKey: apiKey,
-    });
-
+    const google = createGoogleGenerativeAI({ apiKey });
     const model = google("gemini-2.0-flash-001");
 
     const videoDetails = await getVideoDetails(videoId);
-    const transcriptData = await getTranscriptFromScrapingSimplified(videoId);
 
-    if (!transcriptData) {
-      console.error("No se pudo obtener la transcripción del video");
+    if (!videoDetails.transcript || videoDetails.transcript.length === 0) {
       return {
         object: null,
         error: "No se pudo obtener la transcripción del video",
@@ -57,31 +49,13 @@ export async function generateVideoTimeline(videoId: string) {
 
     // Formatear la transcripción con marcas de tiempo
     // Formatear la transcripción con marcas de tiempo
-    const formattedTranscript = transcriptData
-      .map((entry) => {
-        // Validar tiempo
-        if (entry.start < 0) {
-          console.warn("Tiempo negativo encontrado:", entry);
-          return `[TIEMPO INVÁLIDO] ${entry.text}`;
-        }
+    const formattedTranscript = formatTranscriptWithStartAndEnd(
+      videoDetails.transcript,
+      videoDetails.duration
+    );
 
-        const minutes = Math.floor(entry.start / 60);
-        const seconds = Math.floor(entry.start % 60);
-
-        // Validar valores numéricos
-        if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
-          console.warn("Tiempo no numérico:", entry);
-          return `[TIEMPO INVÁLIDO] ${entry.text}`;
-        }
-
-        return `[${minutes}:${seconds.toString().padStart(2, "0")}] ${
-          entry.text
-        }`;
-      })
-      .join("\n");
-
-    console.log("Video Details en timeline-actions:", {
-      videoDetails,
+    console.log({
+      formattedTranscript,
     });
 
     const stream = createStreamableValue();
@@ -121,11 +95,10 @@ ${formattedTranscript}
 - Asegúrate de que las marcas de tiempo estén bien sincronizadas con el contenido del video.
 - El formato debe coincidir exactamente con el esquema JSON esperado.
 - Siempre responde en **español**.
-      `,
+        `,
       });
 
       for await (const partialObject of partialObjectStream) {
-        // Validar que los tiempos no excedan la duración del video
         if (partialObject.timeline) {
           partialObject.timeline = partialObject.timeline.map((entry) => ({
             ...entry,
@@ -134,6 +107,7 @@ ${formattedTranscript}
         }
         stream.update(partialObject);
       }
+
       stream.done();
     })();
 
@@ -144,12 +118,42 @@ ${formattedTranscript}
       details: formattedTranscript,
     };
   } catch (error) {
-    console.log("Error en generateVideoTimeline:", error);
-
     console.error("Error en generateVideoTimeline:", error);
     return {
       object: null,
       error: "Error en generateVideoTimeline",
     };
   }
+}
+
+function formatTranscriptWithStartAndEnd(
+  transcript: {
+    text: string;
+    start: number;
+    duration?: number;
+  }[],
+  videoDuration: number
+): string {
+  const formatted = transcript
+    .filter((entry) => entry.text.trim().length > 5)
+    .sort((a, b) => a.start - b.start)
+    .map((entry, index, arr) => {
+      const start = entry.start;
+      const end =
+        index < arr.length - 1
+          ? arr[index + 1].start
+          : Math.min(start + (entry.duration || 5), videoDuration); // fallback si no hay siguiente
+
+      const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s.toString().padStart(2, "0")}`;
+      };
+
+      return `[INICIO: ${formatTime(start)}] [FIN: ${formatTime(end)}] ${
+        entry.text
+      }`;
+    });
+
+  return formatted.join("\n");
 }

@@ -1,130 +1,163 @@
 "use server";
 
+import axios from "axios";
+import type { ResponseVideoDetailsFastApi } from "../types";
+import { DOMParser } from "xmldom";
+
+async function checkAndProcess<T>(
+  promise: Promise<T>,
+  errorMessage: string
+): Promise<T> {
+  const result = await promise;
+
+  if (!result) {
+    throw new Error(errorMessage);
+  }
+  return result;
+}
+
 export async function getVideoDetails(videoId: string) {
+  if (!videoId) {
+    throw new Error("Video id is necessary");
+  }
+
+  const options = {
+    method: "GET",
+    url: process.env.RAPID_API_URL,
+    params: { id: videoId },
+    headers: {
+      "x-rapidapi-key": process.env.RAPID_API_KEY,
+      "x-rapidapi-host": process.env.RAPID_API_HOST,
+    },
+  };
+
   try {
-    const response = await fetch(
-      `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+    const videoDetails = await checkAndProcess(
+      CheckVideoDetails(options),
+      "Failed to get video length"
     );
-    if (!response.ok) throw new Error("Failed to fetch video details");
 
-    const data = await response.json();
+    const maxHours = 1;
+    const maxMinutes = 10;
+    const max = maxHours * 60 + maxMinutes;
 
-    // Verificación robusta de la duración
-    let duration = 0;
-    if (data.duration) {
-      duration = parseDuration(data.duration);
-    } else {
-      // Intento alternativo de obtener la duración
-      duration = await getDurationFromYoutubePlayer(videoId);
+    if (Number(videoDetails?.lengthSeconds) > max * 60) {
+      throw new Error(
+        `Video duration must be less than ${maxHours} hours and ${maxMinutes} minutes`
+      );
     }
 
+    const videoTranscript = await checkAndProcess(
+      getVideoTranscript(options),
+      "Failed to get video subtitles"
+    );
+
+    const parsedTranscript = await parseXMLContent(
+      videoTranscript?.subtitles.subtitles[0]
+    );
+
     return {
-      title: data.title || "Video sin título",
-      description: data.description || "",
-      duration: duration > 0 ? duration : 0, // Asegurar no negativo
-      thumbnails: data.thumbnail_url ? [data.thumbnail_url] : [],
+      title: videoDetails?.title,
+      description: videoDetails?.description,
+      duration: Number(videoDetails?.lengthSeconds),
+      thumbnails: videoDetails?.thumbnail,
+      transcript: parsedTranscript,
     };
   } catch (error) {
-    console.error("Error fetching video details:", error);
+    console.error("Error en getVideoDetails:", error);
     return {
       title: "Video sin título",
       description: "",
-      duration: 0, // Valor por defecto seguro
+      duration: 0,
       thumbnails: [],
+      transcript: [],
     };
   }
 }
 
-// Función alternativa para obtener duración
-async function getDurationFromYoutubePlayer(videoId: string): Promise<number> {
+interface Options {
+  method: string;
+  url?: string;
+  params: { id: string };
+  headers: {
+    "x-rapidapi-key": string | undefined;
+    "x-rapidapi-host": string | undefined;
+  };
+}
+
+export async function CheckVideoDetails(options: Options) {
   try {
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
-    const html = await response.text();
+    const response: {
+      data: ResponseVideoDetailsFastApi;
+    } = await axios.request(options);
+    const data = response.data;
 
-    // Buscar la duración en el HTML
-    const durationRegex = /"approxDurationMs":"(\d+)"/;
-    const match = html.match(durationRegex);
-
-    if (match) {
-      return Math.floor(Number.parseInt(match[1]) / 1000); // Convertir ms a segundos
+    if (!data || !data.lengthSeconds) {
+      throw new Error("Failed to get video length");
     }
-    return 0;
-  } catch {
-    return 0;
-  }
-}
 
-// Función más robusta para parsear duración
-function parseDuration(durationStr: string | number): number {
-  if (typeof durationStr === "number") return durationStr;
+    if (!data.subtitles.subtitles[0]) {
+      throw new Error("Failed to get video subtitles");
+    }
 
-  try {
-    const parts = durationStr.split(":").reverse();
-    let seconds = 0;
-
-    if (parts[0]) seconds += Number(parts[0]);
-    if (parts[1]) seconds += Number(parts[1]) * 60;
-    if (parts[2]) seconds += Number(parts[2]) * 3600;
-
-    return seconds;
+    return data;
   } catch (error) {
-    console.error("Error parsing duration:", error);
-    return 0;
+    console.error(error);
   }
 }
 
-export async function getTranscriptFromScrapingSimplified(
-  videoId: string
-): Promise<Array<{ text: string; start: number }> | null> {
+async function getVideoTranscript(options: Options) {
   try {
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
-    const html = await response.text();
+    const response: {
+      data: ResponseVideoDetailsFastApi;
+    } = await axios.request(options);
+    return response.data;
+  } catch (error) {}
+}
 
-    // Buscar JSON con las transcripciones
-    const regex = /"captionTracks":(\[.*?\])/;
-    const match = html.match(regex);
+export async function parseXMLContent(xmlContentLink?: {
+  url: string;
+  languageName: string;
+  languageCode: string;
+  isTranslatable: boolean;
+}): Promise<
+  | {
+      text: string;
+      start: number;
+    }[]
+  | null
+> {
+  if (!xmlContentLink) {
+    throw new Error("Failed to get video subtitles");
+  }
 
-    if (!match) return null;
+  try {
+    const stringToParse = await axios.get(xmlContentLink.url);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(stringToParse.data, "application/xml");
+    const textElements = doc.getElementsByTagName("text");
+    const results = [];
 
-    const captionTracks = JSON.parse(match[1]);
-    if (!captionTracks.length) return null;
+    for (let i = 0; i < textElements.length; i++) {
+      /* 
+      tiene esta forma <text start="46.32" dur="7.399">crear una lista de nombres mejores y así</text> */
 
-    // Obtener la transcripción en español o la primera disponible
-    const spanishTrack =
-      captionTracks.find((track: { languageCode: string | string[] }) =>
-        track.languageCode.includes("es")
-      ) || captionTracks[0];
+      const textContent = textElements[i].textContent;
+      const startTimeStamp = Number(textElements[i].getAttribute("start"));
+      const duration = Number(textElements[i].getAttribute("dur"));
 
-    const transcriptResponse = await fetch(spanishTrack.baseUrl);
-    const transcriptXml = await transcriptResponse.text();
-
-    // Extraer texto y tiempos del XML
-    const timeTextMatches = transcriptXml.match(
-      /<text start="([^"]+)"[^>]*>([^<]+)<\/text>/g
-    );
-    if (!timeTextMatches) return null;
-
-    const transcriptWithTimes = [];
-    for (const match of timeTextMatches) {
-      const startMatch = match.match(/start="([^"]+)"/);
-      const textMatch = match.match(/>([^<]+)</);
-
-      if (startMatch && textMatch) {
-        const startTime = Number.parseFloat(startMatch[1]);
-        // Validar que el tiempo sea un número positivo
-        if (!Number.isNaN(startTime) && startTime >= 0) {
-          transcriptWithTimes.push({
-            text: textMatch[1],
-            start: startTime,
-          });
-        }
+      if (textContent && startTimeStamp) {
+        results.push({
+          text: textContent,
+          start: startTimeStamp,
+          duration,
+        });
       }
     }
 
-    console.log("Transcript with valid times:", transcriptWithTimes);
-    return transcriptWithTimes.length > 0 ? transcriptWithTimes : null;
+    return results;
   } catch (error) {
-    console.error("Scraping failed:", error);
+    console.error(error);
     return null;
   }
 }
