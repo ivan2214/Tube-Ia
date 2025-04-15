@@ -4,8 +4,6 @@ import { formatTime } from "@/shared/utils/format-time";
 import { google } from "googleapis";
 import { type TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
 
-export const runtime = "nodejs";
-
 // Define types for our return values
 interface VideoDetails {
   title: string;
