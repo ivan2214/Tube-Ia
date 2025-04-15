@@ -29,6 +29,7 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { useState } from "react";
 import { Loader } from "lucide-react";
+import { extractVideoId } from "@/shared/utils/youtube-utils";
 
 interface ClientHistoryProps {
   videos?: VideoWithRelations[];
@@ -92,34 +93,37 @@ export const ClientHistory: React.FC<ClientHistoryProps> = ({ videos }) => {
           <Loader className="animate-spin" />
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {videos?.map((entry) => (
-              <Card key={entry.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="line-clamp-2 text-lg">
-                    {entry.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="mb-3 aspect-video overflow-hidden rounded-lg">
-                    <img
-                      src={`https://img.youtube.com/vi/${entry.id}/mqdefault.jpg`}
-                      alt={entry.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <p className="text-gray-500 text-sm">
-                    hace {formatDistanceToNow(new Date(entry.createdAt))}
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Link href={`/video/${entry.id}`} className="w-full">
-                    <Button variant="outline" className="w-full">
-                      Ver video
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
+            {videos?.map((entry) => {
+              const id = extractVideoId(entry.url);
+              return (
+                <Card key={entry.id} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="line-clamp-2 text-lg">
+                      {entry.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="mb-3 aspect-video overflow-hidden rounded-lg">
+                      <img
+                        src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`}
+                        alt={entry.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <p className="text-gray-500 text-sm">
+                      hace {formatDistanceToNow(new Date(entry.createdAt))}
+                    </p>
+                  </CardContent>
+                  <CardFooter>
+                    <Link href={`/video/${id}`} className="w-full">
+                      <Button variant="outline" className="w-full">
+                        Ver video
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

@@ -1,4 +1,8 @@
-export function extractVideoId(input: string): string | null {
+export function extractVideoId(input?: string): string | null {
+  if (!input) {
+    return null;
+  }
+
   // Handle YouTube URLs
   const urlRegex =
     /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
