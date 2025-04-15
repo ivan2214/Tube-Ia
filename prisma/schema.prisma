@@ -82,7 +82,7 @@ model History {
 }
 
 model Video {
-  id       String @id @unique
+  id       String @id @default(cuid())
   title    String
   details  String @db.Text
   duration Float

@@ -72,7 +72,6 @@ export async function saveToHistory({
 
     const video = await db.video.create({
       data: {
-        id,
         title,
         details,
         duration,

@@ -54,10 +54,6 @@ export async function generateVideoTimeline(videoId: string) {
       videoDetails.duration
     );
 
-    console.log({
-      formattedTranscript,
-    });
-
     const stream = createStreamableValue();
 
     (async () => {
