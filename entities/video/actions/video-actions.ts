@@ -21,6 +21,12 @@ export async function getVideoDetails(videoId: string) {
     throw new Error("Video id is necessary");
   }
 
+  const { RAPID_API_URL, RAPID_API_KEY, RAPID_API_HOST } = process.env;
+
+  if (!RAPID_API_URL || !RAPID_API_KEY || !RAPID_API_HOST) {
+    throw new Error("Missing environment variables");
+  }
+
   const options = {
     method: "GET",
     url: process.env.RAPID_API_URL,
