@@ -112,6 +112,7 @@ ${formattedTranscript}
       title: videoDetails.title,
       duration: videoDetails.duration,
       details: formattedTranscript,
+      thumbnail: videoDetails.thumbnails?.[0].url,
     };
   } catch (error) {
     console.error("Error en generateVideoTimeline:", error);

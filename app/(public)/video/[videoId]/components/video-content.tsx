@@ -40,6 +40,7 @@ export interface NewVideo {
   duration?: number;
   timeline?: TimelineEntry[] | null;
   url?: string;
+  thumbnail?: string;
 }
 
 export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
@@ -71,7 +72,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
         setIsLoading(false);
       } else {
         // Si no existe, generamos una nueva línea de tiempo
-        const { object, error, details, duration, title } =
+        const { object, error, details, duration, title, thumbnail } =
           await generateVideoTimeline(videoId);
 
         if (error || !object) {
@@ -82,13 +83,20 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
           return;
         }
 
-        if (details && duration && title) {
+        if (details && duration && title && thumbnail && videoId) {
+          const url = `https://www.youtube.com/watch?v=${videoId}`;
+
+          console.log({
+            url,
+          });
+
           setNewVideo({
             id: videoId,
             title,
             details,
             duration,
-            url: `https://www.youtube.com/watch?v=${videoId}`,
+            url,
+            thumbnail,
           });
         }
 

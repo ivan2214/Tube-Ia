@@ -58,18 +58,29 @@ export async function saveToHistory({
       throw new Error("No se pudo crear el video");
     }
 
-    // verificamos si el video ya existe
+    // verificamos si el usuario ya tiene el video dentro de su historial con la url
 
-    const existingVideo = await db.video.findFirst({
+    const existingVideo = await db.user.findUnique({
       where: {
-        id,
+        id: currentUser.id,
+      },
+      include: {
+        history: {
+          where: {
+            videos: {
+              // some es para ver si el video ya existe en el historial
+              some: {
+                url: url,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (existingVideo) {
-      throw new Error("Video already exists");
+    if (existingVideo?.history && existingVideo?.history?.length > 0) {
+      throw new Error("El video ya existe en el historial");
     }
-
     const video = await db.video.create({
       data: {
         title,
