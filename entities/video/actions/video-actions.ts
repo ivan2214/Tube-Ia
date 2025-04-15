@@ -1,176 +1,130 @@
 "use server";
 
-import { formatTime } from "@/shared/utils/format-time";
-import { google } from "googleapis";
-import { type TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
-
-export const runtime = "nodejs";
-
-// Define types for our return values
-interface VideoDetails {
-  title: string;
-  description: string;
-  duration: number; // Duration in seconds
-  thumbnailUrl?: string;
-  channelTitle?: string;
-  publishedAt?: string;
-}
-
-// Initialize the YouTube API client
-const youtube = google.youtube({
-  version: "v3",
-  auth: process.env.YOUTUBE_API_KEY, // You'll need to add this to your environment variables
-});
-
-// Helper function to convert ISO 8601 duration to seconds
-function isoDurationToSeconds(duration: string): number {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
-
-  const hours = Number.parseInt(match[1] || "0", 10);
-  const minutes = Number.parseInt(match[2] || "0", 10);
-  const seconds = Number.parseInt(match[3] || "0", 10);
-
-  return hours * 3600 + minutes * 60 + seconds;
-}
-
-export async function getVideoDetails(videoId: string): Promise<VideoDetails> {
+export async function getVideoDetails(videoId: string) {
   try {
-    // Fetch video details from YouTube API
-    const response = await youtube.videos.list({
-      part: ["snippet", "contentDetails"],
-      id: [videoId],
-    });
+    const response = await fetch(
+      `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch video details");
 
-    const video = response.data.items?.[0];
+    const data = await response.json();
 
-    if (!video) {
-      console.error("Video not found:", videoId);
-      return {
-        title: "Video Not Found",
-        description: "The requested video could not be found.",
-        duration: 0,
-      };
+    // Verificación robusta de la duración
+    let duration = 0;
+    if (data.duration) {
+      duration = parseDuration(data.duration);
+    } else {
+      // Intento alternativo de obtener la duración
+      duration = await getDurationFromYoutubePlayer(videoId);
     }
 
-    // Extract the duration in seconds from the ISO 8601 duration format
-    const durationISO = video.contentDetails?.duration || "PT0S";
-    const durationSeconds = isoDurationToSeconds(durationISO);
-
     return {
-      title: video.snippet?.title || "Unknown Title",
-      description: video.snippet?.description || "No description available",
-      duration: durationSeconds,
-      thumbnailUrl: video.snippet?.thumbnails?.high?.url || undefined,
-      channelTitle: video.snippet?.channelTitle || undefined,
-      publishedAt: video.snippet?.publishedAt || undefined,
+      title: data.title || "Video sin título",
+      description: data.description || "",
+      duration: duration > 0 ? duration : 0, // Asegurar no negativo
+      thumbnails: data.thumbnail_url ? [data.thumbnail_url] : [],
     };
   } catch (error) {
     console.error("Error fetching video details:", error);
-
-    // Return fallback data in case of error
     return {
-      title: "Error Loading Video",
-      description: "There was an error loading the video details.",
-      duration: 0,
+      title: "Video sin título",
+      description: "",
+      duration: 0, // Valor por defecto seguro
+      thumbnails: [],
     };
   }
 }
 
-export async function getVideoTranscript(videoId: string): Promise<string> {
+// Función alternativa para obtener duración
+async function getDurationFromYoutubePlayer(videoId: string): Promise<number> {
   try {
-    // Validar que el ID del video sea válido
-    if (!videoId || typeof videoId !== "string") {
-      throw new Error("Invalid video ID provided");
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+    const html = await response.text();
+
+    // Buscar la duración en el HTML
+    const durationRegex = /"approxDurationMs":"(\d+)"/;
+    const match = html.match(durationRegex);
+
+    if (match) {
+      return Math.floor(Number.parseInt(match[1]) / 1000); // Convertir ms a segundos
     }
-
-    console.log(`Attempting to fetch transcript for video: ${videoId}`);
-
-    try {
-      const transcript: TranscriptResponse[] =
-        await YoutubeTranscript.fetchTranscript(videoId);
-
-      if (!transcript || transcript.length === 0) {
-        console.error(`No transcript available for video: ${videoId}`);
-        return "Este video no tiene transcripción disponible. YouTube no proporciona subtítulos para este contenido.";
-      }
-
-      console.log(
-        `Successfully fetched transcript with ${transcript.length} entries`
-      );
-
-      // Format transcript with timestamps and ensure they're in chronological order
-      return transcript
-        .sort((a, b) => a.offset - b.offset)
-        .map(
-          (item) =>
-            `[${formatTime(item.offset)} - ${formatTime(
-              item.offset + item.duration
-            )}] ${item.text}`
-        )
-        .join("\n");
-    } catch (specificError) {
-      // Capturar el error específico de transcripción deshabilitada
-      if (
-        specificError instanceof Error &&
-        specificError.message.includes("Transcript is disabled on this video")
-      ) {
-        console.error(`Transcript is disabled for video ${videoId}`);
-        return "Este video tiene la transcripción deshabilitada por el creador del contenido. No es posible obtener subtítulos para este video.";
-      }
-
-      // Re-lanzar otros errores
-      throw specificError;
-    }
-  } catch (error) {
-    // Mejorar el registro de errores para diagnóstico
-    console.error("Error fetching transcript:", error);
-    if (error instanceof Error) {
-      console.error(`Error message: ${error.message}`);
-      console.error(`Error stack: ${error.stack}`);
-    }
-
-    // En lugar de lanzar un error, devolver un mensaje amigable
-    return "No se pudo obtener la transcripción del video. Es posible que el video no tenga subtítulos disponibles o que estén deshabilitados por el creador.";
+    return 0;
+  } catch {
+    return 0;
   }
 }
 
-// Optional: Function to get video chapters from description
-export async function getVideoChapters(
-  videoId: string
-): Promise<Array<{ time: number; title: string }>> {
+// Función más robusta para parsear duración
+function parseDuration(durationStr: string | number): number {
+  if (typeof durationStr === "number") return durationStr;
+
   try {
-    const { description } = await getVideoDetails(videoId);
+    const parts = durationStr.split(":").reverse();
+    let seconds = 0;
 
-    // Look for timestamp patterns in the description (e.g., "0:00 Introduction")
-    const chapterRegex =
-      /(\d+:(?:\d+:)?\d+)\s+(.+?)(?=\n\d+:(?:\d+:)?\d+|\n\n|$)/g;
-    const chapters = [];
-    let match: RegExpExecArray | null;
+    if (parts[0]) seconds += Number(parts[0]);
+    if (parts[1]) seconds += Number(parts[1]) * 60;
+    if (parts[2]) seconds += Number(parts[2]) * 3600;
 
-    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-    while ((match = chapterRegex.exec(description)) !== null) {
-      const timeStr = match[1];
-      const title = match[2].trim();
+    return seconds;
+  } catch (error) {
+    console.error("Error parsing duration:", error);
+    return 0;
+  }
+}
 
-      // Convert timestamp to seconds
-      const timeParts = timeStr.split(":").map(Number);
-      let seconds = 0;
+export async function getTranscriptFromScrapingSimplified(
+  videoId: string
+): Promise<Array<{ text: string; start: number }> | null> {
+  try {
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+    const html = await response.text();
 
-      if (timeParts.length === 3) {
-        // hours:minutes:seconds
-        seconds = timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2];
-      } else if (timeParts.length === 2) {
-        // minutes:seconds
-        seconds = timeParts[0] * 60 + timeParts[1];
+    // Buscar JSON con las transcripciones
+    const regex = /"captionTracks":(\[.*?\])/;
+    const match = html.match(regex);
+
+    if (!match) return null;
+
+    const captionTracks = JSON.parse(match[1]);
+    if (!captionTracks.length) return null;
+
+    // Obtener la transcripción en español o la primera disponible
+    const spanishTrack =
+      captionTracks.find((track: { languageCode: string | string[] }) =>
+        track.languageCode.includes("es")
+      ) || captionTracks[0];
+
+    const transcriptResponse = await fetch(spanishTrack.baseUrl);
+    const transcriptXml = await transcriptResponse.text();
+
+    // Extraer texto y tiempos del XML
+    const timeTextMatches = transcriptXml.match(
+      /<text start="([^"]+)"[^>]*>([^<]+)<\/text>/g
+    );
+    if (!timeTextMatches) return null;
+
+    const transcriptWithTimes = [];
+    for (const match of timeTextMatches) {
+      const startMatch = match.match(/start="([^"]+)"/);
+      const textMatch = match.match(/>([^<]+)</);
+
+      if (startMatch && textMatch) {
+        const startTime = Number.parseFloat(startMatch[1]);
+        // Validar que el tiempo sea un número positivo
+        if (!Number.isNaN(startTime) && startTime >= 0) {
+          transcriptWithTimes.push({
+            text: textMatch[1],
+            start: startTime,
+          });
+        }
       }
-
-      chapters.push({ time: seconds, title });
     }
 
-    return chapters;
+    console.log("Transcript with valid times:", transcriptWithTimes);
+    return transcriptWithTimes.length > 0 ? transcriptWithTimes : null;
   } catch (error) {
-    console.error("Error extracting chapters:", error);
-    return [];
+    console.error("Scraping failed:", error);
+    return null;
   }
 }

@@ -3,8 +3,8 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamObject } from "ai";
 import { z } from "zod";
 import {
-  getVideoTranscript,
   getVideoDetails,
+  getTranscriptFromScrapingSimplified,
 } from "@/entities/video/actions/video-actions";
 import { createStreamableValue } from "ai/rsc";
 import { getApiKey } from "@/shared/actions/api-key-actions";
@@ -44,14 +44,43 @@ export async function generateVideoTimeline(videoId: string) {
   const model = google("gemini-2.0-flash-001");
 
   const videoDetails = await getVideoDetails(videoId);
-  const transcript = await getVideoTranscript(videoId);
+  const transcriptData = await getTranscriptFromScrapingSimplified(videoId);
 
-  if (!transcript) {
+  if (!transcriptData) {
     return {
       object: null,
-      error: "Transcript not found",
+      error: "No se pudo obtener la transcripción del video",
     };
   }
+
+  // Formatear la transcripción con marcas de tiempo
+  // Formatear la transcripción con marcas de tiempo
+  const formattedTranscript = transcriptData
+    .map((entry) => {
+      // Validar tiempo
+      if (entry.start < 0) {
+        console.warn("Tiempo negativo encontrado:", entry);
+        return `[TIEMPO INVÁLIDO] ${entry.text}`;
+      }
+
+      const minutes = Math.floor(entry.start / 60);
+      const seconds = Math.floor(entry.start % 60);
+
+      // Validar valores numéricos
+      if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
+        console.warn("Tiempo no numérico:", entry);
+        return `[TIEMPO INVÁLIDO] ${entry.text}`;
+      }
+
+      return `[${minutes}:${seconds.toString().padStart(2, "0")}] ${
+        entry.text
+      }`;
+    })
+    .join("\n");
+
+  console.log("Video Details en timeline-actions:", {
+    videoDetails,
+  });
 
   const stream = createStreamableValue();
 
@@ -76,7 +105,7 @@ ${Math.floor(videoDetails.duration / 60)}:${String(
       ).padStart(2, "0")} (${videoDetails.duration} segundos)
 
 🔹 TRANSCRIPCIÓN:
-${transcript}
+${formattedTranscript}
 
 🧠 Instrucciones:
 - Crea entre 5 y 15 entradas que representen los puntos clave del video.
@@ -110,6 +139,6 @@ ${transcript}
     object: stream.value,
     title: videoDetails.title,
     duration: videoDetails.duration,
-    details: transcript,
+    details: formattedTranscript,
   };
 }
