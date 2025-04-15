@@ -91,8 +91,9 @@ export async function getTranscriptFromScrapingSimplified(
 
     // Obtener la transcripción en español o la primera disponible
     const spanishTrack =
-      captionTracks.find((track: any) => track.languageCode.includes("es")) ||
-      captionTracks[0];
+      captionTracks.find((track: { languageCode: string | string[] }) =>
+        track.languageCode.includes("es")
+      ) || captionTracks[0];
 
     const transcriptResponse = await fetch(spanishTrack.baseUrl);
     const transcriptXml = await transcriptResponse.text();
@@ -109,15 +110,18 @@ export async function getTranscriptFromScrapingSimplified(
       const textMatch = match.match(/>([^<]+)</);
 
       if (startMatch && textMatch) {
-        transcriptWithTimes.push({
-          text: textMatch[1],
-          start: Number.parseFloat(startMatch[1]),
-        });
+        const startTime = Number.parseFloat(startMatch[1]);
+        // Validar que el tiempo sea un número positivo
+        if (!Number.isNaN(startTime) && startTime >= 0) {
+          transcriptWithTimes.push({
+            text: textMatch[1],
+            start: startTime,
+          });
+        }
       }
     }
 
-    console.log(transcriptWithTimes);
-
+    console.log("Transcript with valid times:", transcriptWithTimes);
     return transcriptWithTimes.length > 0 ? transcriptWithTimes : null;
   } catch (error) {
     console.error("Scraping failed:", error);

@@ -54,18 +54,31 @@ export async function generateVideoTimeline(videoId: string) {
   }
 
   // Formatear la transcripción con marcas de tiempo
+  // Formatear la transcripción con marcas de tiempo
   const formattedTranscript = transcriptData
     .map((entry) => {
+      // Validar tiempo
+      if (entry.start < 0) {
+        console.warn("Tiempo negativo encontrado:", entry);
+        return `[TIEMPO INVÁLIDO] ${entry.text}`;
+      }
+
       const minutes = Math.floor(entry.start / 60);
       const seconds = Math.floor(entry.start % 60);
+
+      // Validar valores numéricos
+      if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
+        console.warn("Tiempo no numérico:", entry);
+        return `[TIEMPO INVÁLIDO] ${entry.text}`;
+      }
+
       return `[${minutes}:${seconds.toString().padStart(2, "0")}] ${
         entry.text
       }`;
     })
     .join("\n");
 
-  console.log({
-    formattedTranscript,
+  console.log("Video Details en timeline-actions:", {
     videoDetails,
   });
 
@@ -126,6 +139,6 @@ ${formattedTranscript}
     object: stream.value,
     title: videoDetails.title,
     duration: videoDetails.duration,
-    details: transcriptData,
+    details: videoDetails,
   };
 }
