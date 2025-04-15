@@ -5,6 +5,7 @@ import { db } from "@/db";
 import type { VideoWithRelations } from "@/entities/video/actions/video-db";
 
 import { getCurrentUser } from "@/shared/hooks/current-user";
+import { revalidatePath } from "next/cache";
 
 export async function saveToHistory({
   id,
@@ -143,5 +144,7 @@ export async function clearHistory(): Promise<void> {
     });
   } catch (error) {
     console.error("Error clearing history:", error);
+  } finally {
+    revalidatePath("/history");
   }
 }
