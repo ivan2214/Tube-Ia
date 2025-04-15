@@ -43,8 +43,8 @@ export async function getVideoDetails(videoId: string) {
       "Failed to get video length"
     );
 
-    const maxHours = 1;
-    const maxMinutes = 10;
+    const maxHours = 3;
+    const maxMinutes = 30;
     const max = maxHours * 60 + maxMinutes;
 
     if (Number(videoDetails?.lengthSeconds) > max * 60) {
