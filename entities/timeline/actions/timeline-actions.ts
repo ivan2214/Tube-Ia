@@ -139,6 +139,6 @@ ${formattedTranscript}
     object: stream.value,
     title: videoDetails.title,
     duration: videoDetails.duration,
-    details: videoDetails,
+    details: formattedTranscript,
   };
 }
