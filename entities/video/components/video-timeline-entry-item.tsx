@@ -18,7 +18,7 @@ export const TimelineEntryItem = memo(
       return (
         <Button
           className={`group cursor-pointer rounded-md p-2 transition-colors duration-300 ${
-            isActive ? "border-blue-500 border-l-4 bg-blue-500" : ""
+            isActive ? " bg-blue-500" : ""
           }`}
           onClick={() => onClick(entry.time)}
           variant="ghost"

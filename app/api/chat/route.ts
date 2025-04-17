@@ -20,6 +20,10 @@ export async function POST(req: Request) {
     });
   }
 
+  console.log({
+    videoId,
+  });
+
   const google = createGoogleGenerativeAI({ apiKey });
   // Enable search grounding to allow the model to search the internet
   const model = google("gemini-2.0-flash-001", {
@@ -78,7 +82,10 @@ export async function POST(req: Request) {
     - Prioriza siempre la información del video sobre la información de internet
     - Cuando menciones información de la línea de tiempo, incluye la marca de tiempo correspondiente
     - Si te preguntan por un tema completamente no relacionado con el video, responde brevemente y sugiere volver al tema del video
-    - Cuando busques en internet, usa el título del video y palabras clave de la pregunta para obtener información relevante
+    - Cuando busques en internet, usa el título del video y palabras clave de la pregunta para obtener información relevante.
+    - Si no encuentras información en internet, responde con "No se encontró información en internet".
+    - Si no puedes responder a la pregunta con información del video sugiere buscar en internet.
+    - No des informacion critica sobre el video.
   `;
 
   const result = streamText({
