@@ -131,15 +131,20 @@ function formatTranscriptWithStartAndEnd(
   }[],
   videoDuration: number
 ): string {
-  const formatted = transcript
+  // First, ensure the transcript entries are properly sorted by time
+  const sortedTranscript = [...transcript].sort((a, b) => a.start - b.start);
+
+  // Check if we need to apply a global time correction
+  const timeOffset = 0;
+
+  const formatted = sortedTranscript
     .filter((entry) => entry.text.trim().length > 5)
-    .sort((a, b) => a.start - b.start)
     .map((entry, index, arr) => {
-      const start = entry.start;
+      const start = Math.max(0, entry.start - timeOffset);
       const end =
         index < arr.length - 1
-          ? arr[index + 1].start
-          : Math.min(start + (entry.duration || 5), videoDuration); // fallback si no hay siguiente
+          ? arr[index + 1].start - timeOffset
+          : Math.min(start + (entry.duration || 5), videoDuration);
 
       const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);

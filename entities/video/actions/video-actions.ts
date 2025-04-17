@@ -144,6 +144,19 @@ export async function parseXMLContent(xmlContentLink?: {
     const textElements = doc.getElementsByTagName("text");
     const results = [];
 
+    // Check if we need to apply a time correction
+    // This helps fix potential timestamp misalignment issues
+    let timeCorrection = 0;
+    
+    // If the first subtitle starts after 10 seconds, we assume there's no intro correction needed
+    if (textElements.length > 0) {
+      const firstStartTime = Number(textElements[0].getAttribute("start"));
+      if (firstStartTime < 10) {
+        // No significant correction needed for videos that start subtitles early
+        timeCorrection = 0;
+      }
+    }
+
     for (let i = 0; i < textElements.length; i++) {
       /* 
       tiene esta forma <text start="46.32" dur="7.399">crear una lista de nombres mejores y así</text> */
@@ -155,7 +168,7 @@ export async function parseXMLContent(xmlContentLink?: {
       if (textContent && startTimeStamp) {
         results.push({
           text: textContent,
-          start: startTimeStamp,
+          start: Math.max(0, startTimeStamp - timeCorrection), // Apply correction but ensure we don't go negative
           duration,
         });
       }

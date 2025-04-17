@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, videoId } = await req.json(); // ya no esperás timeline
+  const { messages, videoId } = await req.json();
 
   const { apiKey } = await getApiKey();
   if (!apiKey) {
@@ -21,28 +21,35 @@ export async function POST(req: Request) {
   }
 
   const google = createGoogleGenerativeAI({ apiKey });
+  // Enable search grounding to allow the model to search the internet
   const model = google("gemini-2.0-flash-001", {
     useSearchGrounding: true,
+    dynamicRetrievalConfig: {
+      mode: "MODE_DYNAMIC",
+    },
   });
 
+  // Get more comprehensive video details
   const videoDetails = await db.video.findUnique({
     where: { id: videoId },
+    include: {
+      timeline: {
+        orderBy: { time: "asc" },
+      },
+    },
   });
 
   if (!videoDetails) {
     return NextResponse.json({ error: "Video not found", success: false });
   }
 
-  const timeline = await db.timeline.findMany({
-    where: { videoId },
-    orderBy: { time: "asc" },
-  });
-
-  const timelineContext = timeline
-    .map(
-      (entry) =>
-        `[${formatTime(entry.time)}] ${entry.title}: ${entry.description}`
-    )
+  // Format timeline with more structured information
+  const timelineContext = videoDetails.timeline
+    .map((entry) => {
+      // Ensure the time is correctly formatted and accurate
+      const formattedTime = formatTime(entry.time);
+      return `[${formattedTime}] ${entry.title}: ${entry.description}`;
+    })
     .join("\n");
 
   const systemPrompt = `
@@ -52,28 +59,34 @@ export async function POST(req: Request) {
     📹 TÍTULO DEL VIDEO:
     ${videoDetails.title}
 
-    📝 DETALLES DEL VIDEO:
-    ${videoDetails.details}
+    🔗 URL DEL VIDEO:
+    ${videoDetails.url || "No disponible"}
 
-    🕒 DURACIÓN:
-    ${Math.floor(videoDetails.duration / 60)}:${String(
-    videoDetails.duration % 60
-  ).padStart(2, "0")} minutos
+    ⏱️ DURACIÓN:
+    ${formatTime(videoDetails.duration)} minutos
 
     🧩 LÍNEA DE TIEMPO DEL VIDEO:
     ${timelineContext}
+    ${videoDetails.details}
 
     📌 INSTRUCCIONES PARA RESPONDER:
-    - Cita los momentos del video si es relevante
+    - Cita los momentos específicos del video cuando sea relevante usando el formato [HH:MM:SS]
+    - Asegúrate de que los tiempos que menciones sean precisos y correspondan al contenido real del video
     - Sé conciso pero informativo
-    - Si algo no está en el video, dilo
-    - Solo puedes hablar sobre lo que está en el contenido y la línea de tiempo
+    - Si la información solicitada no está en el video o en la línea de tiempo, BUSCA EN INTERNET para complementar tu respuesta
+    - Cuando uses información de internet, indica claramente que es información adicional no presente en el video
+    - Prioriza siempre la información del video sobre la información de internet
+    - Cuando menciones información de la línea de tiempo, incluye la marca de tiempo correspondiente
+    - Si te preguntan por un tema completamente no relacionado con el video, responde brevemente y sugiere volver al tema del video
+    - Cuando busques en internet, usa el título del video y palabras clave de la pregunta para obtener información relevante
   `;
 
   const result = streamText({
     model,
     messages,
     system: systemPrompt,
+    temperature: 0.7,
+    maxTokens: 2048,
   });
 
   return result.toDataStreamResponse();

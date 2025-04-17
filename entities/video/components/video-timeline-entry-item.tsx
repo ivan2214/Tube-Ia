@@ -18,9 +18,7 @@ export const TimelineEntryItem = memo(
       return (
         <Button
           className={`group cursor-pointer rounded-md p-2 transition-colors duration-300 ${
-            isActive
-              ? "border-blue-500 border-l-4 bg-blue-500"
-              : "hover:bg-gray-500"
+            isActive ? "border-blue-500 border-l-4 bg-blue-500" : ""
           }`}
           onClick={() => onClick(entry.time)}
           variant="ghost"
@@ -47,7 +45,7 @@ export const TimelineEntryItem = memo(
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Badge className="mt-1 shrink-0 group-hover:text-blue-500">
+            <Badge className="mt-1 shrink-0 dark:group-hover:text-blue-500">
               {formatTime(entry.time)}
             </Badge>
             <div>
