@@ -1,6 +1,6 @@
 "use server";
 
-import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
+import type { NewVideo } from "@/entities/video/components/video-content";
 import { db } from "@/db";
 import type { VideoWithRelations } from "@/entities/video/actions/video-db";
 

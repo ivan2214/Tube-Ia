@@ -14,7 +14,7 @@ import { VideoMessageInput } from "./video-message-input";
 
 import { type Message, useChat } from "@ai-sdk/react";
 import type { VideoWithRelations } from "../actions/video-db";
-import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
+import type { NewVideo } from "@/entities/video/components/video-content";
 import { generateId } from "ai";
 import { cn } from "@/shared/lib/utils";
 import type { User } from "@/prisma/generated";

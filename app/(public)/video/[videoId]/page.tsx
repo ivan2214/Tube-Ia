@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { VideoContent } from "./components/video-content";
+import { VideoContent } from "../../../../entities/video/components/video-content";
 import { getCurrentUser } from "@/shared/hooks/current-user";
 
 type Params = Promise<{
