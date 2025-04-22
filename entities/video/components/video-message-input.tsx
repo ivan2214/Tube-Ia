@@ -3,6 +3,7 @@
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { type Message, useChat } from "@ai-sdk/react";
+import { useCallback, useMemo } from "react";
 
 import { Loader, Send } from "lucide-react";
 
@@ -21,15 +22,19 @@ export const VideoMessageInput = ({
   chatId: string;
   messages: Message[];
 }) => {
-  const { input, handleSubmit, handleInputChange, isLoading } = useChat({
-    id: chatId,
-    api: "/api/chat",
-    body: {
+  // Memoizar el body para evitar recreaciones en cada renderizado
+  const chatBody = useMemo(
+    () => ({
       videoId,
       timeline,
-    },
-    experimental_throttle: 50,
-    onFinish: async (message) => {
+    }),
+    [videoId, timeline]
+  );
+
+  // Memoizar la función onFinish para evitar recreaciones en cada renderizado
+  // No incluimos input como dependencia ya que se capturará en el momento de la llamada
+  const handleFinish = useCallback(
+    async (message: Message, currentInput: string) => {
       // Get all existing messages
       const oldMessages = messages.map((msg) => ({
         id: msg.id,
@@ -41,7 +46,7 @@ export const VideoMessageInput = ({
       const userMessage = {
         id: `msg-${generateId()}`,
         role: "user" as const,
-        content: input,
+        content: currentInput,
       };
 
       // Create the AI response message
@@ -60,6 +65,15 @@ export const VideoMessageInput = ({
         chatId,
       });
     },
+    [messages, videoId, chatId]
+  );
+
+  const { input, handleSubmit, handleInputChange, isLoading } = useChat({
+    id: chatId,
+    api: "/api/chat",
+    body: chatBody,
+    experimental_throttle: 50,
+    onFinish: (message) => handleFinish(message, input),
   });
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">

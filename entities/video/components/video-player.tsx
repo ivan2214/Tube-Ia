@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { Card } from "@/shared/components/ui/card";
 
 interface VideoPlayerProps {
@@ -29,6 +29,43 @@ export function VideoPlayer({
   const playerInstanceRef = useRef<any>(null);
   const lastTimeUpdateRef = useRef<number>(0);
 
+  // Definir funciones de callback fuera del efecto para evitar recreaciones
+  const initPlayer = useCallback(() => {
+    if (playerInstanceRef.current) {
+      playerInstanceRef.current.destroy();
+    }
+
+    playerInstanceRef.current = new window.YT.Player(playerRef.current, {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 0,
+        modestbranding: 1,
+        rel: 0,
+      },
+      events: {
+        onReady: () => {
+          // Player is ready
+        },
+        onStateChange: (event: { data: number }) => {
+          if (event.data === window.YT.PlayerState.PLAYING) {
+            // Start time update interval when playing
+            const interval = setInterval(() => {
+              if (playerInstanceRef.current?.getCurrentTime) {
+                const currentTime = playerInstanceRef.current.getCurrentTime();
+                if (Math.abs(currentTime - lastTimeUpdateRef.current) > 0.5) {
+                  lastTimeUpdateRef.current = currentTime;
+                  onTimeUpdate(currentTime);
+                }
+              }
+            }, 500);
+
+            return () => clearInterval(interval);
+          }
+        },
+      },
+    });
+  }, [videoId, onTimeUpdate]);
+
   useEffect(() => {
     // Load YouTube API
     if (!window.YT) {
@@ -40,46 +77,6 @@ export function VideoPlayer({
       window.onYouTubeIframeAPIReady = initPlayer;
     } else {
       initPlayer();
-    }
-
-    function initPlayer() {
-      if (playerInstanceRef.current) {
-        playerInstanceRef.current.destroy();
-      }
-
-      playerInstanceRef.current = new window.YT.Player(playerRef.current, {
-        videoId: videoId,
-        playerVars: {
-          autoplay: 0,
-          modestbranding: 1,
-          rel: 0,
-        },
-        events: {
-          onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange,
-        },
-      });
-    }
-
-    function onPlayerReady() {
-      // Player is ready
-    }
-
-    function onPlayerStateChange(event: { data: number }) {
-      if (event.data === window.YT.PlayerState.PLAYING) {
-        // Start time update interval when playing
-        const interval = setInterval(() => {
-          if (playerInstanceRef.current?.getCurrentTime) {
-            const currentTime = playerInstanceRef.current.getCurrentTime();
-            if (Math.abs(currentTime - lastTimeUpdateRef.current) > 0.5) {
-              lastTimeUpdateRef.current = currentTime;
-              onTimeUpdate(currentTime);
-            }
-          }
-        }, 500);
-
-        return () => clearInterval(interval);
-      }
     }
 
     return () => {

@@ -4,6 +4,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { formatTime } from "@/shared/utils/format-time";
 import type { TimelineEntry } from "@/entities/timeline/types";
+import { cn } from "@/shared/lib/utils";
 
 interface TimelineEntryItemProps {
   entry: TimelineEntry;
@@ -17,15 +18,24 @@ export const TimelineEntryItem = memo(
     if (compact) {
       return (
         <Button
-          className={`group cursor-pointer rounded-md p-2 transition-colors duration-300 ${
-            isActive ? " bg-blue-500" : ""
-          }`}
+          className="group cursor-pointer rounded-md p-2 transition-colors duration-300"
           onClick={() => onClick(entry.time)}
           variant="ghost"
           size="sm"
         >
-          <div className="flex items-center gap-2 group-hover:text-blue-500">
-            <Badge className="group-hover:text-blue-500" variant="outline">
+          <div
+            className={cn(
+              "flex items-center gap-2 group-hover:text-blue-500",
+              isActive && "text-blue-500"
+            )}
+          >
+            <Badge
+              className={cn(
+                "group-hover:text-blue-500",
+                isActive && "text-blue-500"
+              )}
+              variant="outline"
+            >
               {formatTime(entry.time)}
             </Badge>
             <h3 className="font-medium text-sm group-hover:text-blue-500">

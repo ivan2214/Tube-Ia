@@ -19,5 +19,5 @@ export default async function VideoPage({ params }: { params: Params }) {
     return redirect("/?auth=signin");
   }
 
-  return <VideoContent videoId={videoId} />;
+  return <VideoContent currentUser={currentUser} videoId={videoId} />;
 }

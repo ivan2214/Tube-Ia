@@ -2,7 +2,7 @@
 
 // Este componente maneja la visualización y funcionalidad principal del reproductor de video
 // Importamos los hooks necesarios de React y componentes personalizados
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { VideoPlayer } from "@/entities/video/components/video-player";
 import { VideoTimeline } from "@/entities/video/components/video-timeline";
 import { VideoChat } from "@/entities/video/components/video-chat";
@@ -25,10 +25,12 @@ import {
 import type { TimelineEntry } from "@/entities/timeline/types";
 import { saveToHistory } from "@/entities/history/actions/history-action";
 import { generateId, type Message } from "ai";
+import type { User } from "@/prisma/generated";
 
 // Definimos la interfaz para las props del componente
 interface VideoContentProps {
   videoId: string;
+  currentUser: User;
 }
 
 // Componente principal que muestra el contenido del video
@@ -43,10 +45,13 @@ export interface NewVideo {
   thumbnail?: string;
 }
 
-export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
+export const VideoContent: React.FC<VideoContentProps> = ({
+  videoId,
+  currentUser,
+}) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeline, setTimeline] = useState<TimelineEntry[] | null>(null);
+  const [, setTimeline] = useState<TimelineEntry[] | null>(null);
   const [existingVideo, setExistingVideo] = useState<VideoWithRelations | null>(
     null
   );
@@ -54,7 +59,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
   const [finished, setFinished] = useState(false);
 
   // Efecto para cargar los datos del video al montar el componente
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       if (!videoId) {
@@ -119,31 +124,31 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
     } finally {
       setFinished(true);
     }
-  };
+  }, [videoId]);
 
-  const handleSaveToHistory = async (newVideo: NewVideo) => {
+  const handleSaveToHistory = useCallback(async (newVideo: NewVideo) => {
     await saveToHistory(newVideo);
-  };
+  }, []);
 
   // Efecto para manejar la actualización de la línea de tiempo
   useEffect(() => {
     if (finished && !existingVideo && newVideo) {
       handleSaveToHistory(newVideo);
     }
-  }, [finished]);
+  }, [finished, existingVideo, newVideo, handleSaveToHistory]);
 
   useEffect(() => {
     fetchData();
-  }, [videoId]);
+  }, [videoId, fetchData]);
 
   // Manejadores de eventos para la línea de tiempo
-  const handleTimeUpdate = (time: number) => {
+  const handleTimeUpdate = useCallback((time: number) => {
     setCurrentTime(time);
-  };
+  }, []);
 
-  const handleTimelineClick = (time: number) => {
+  const handleTimelineClick = useCallback((time: number) => {
     setCurrentTime(time);
-  };
+  }, []);
 
   // Renderizado del componente
   return (
@@ -195,6 +200,7 @@ export const VideoContent: React.FC<VideoContentProps> = ({ videoId }) => {
               </TabsContent>
               <TabsContent value="chat" className="mt-4">
                 <VideoChat
+                  currentUser={currentUser}
                   video={existingVideo || newVideo}
                   chatId={existingVideo?.chat?.id || generateId()}
                   initialMessages={

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 
 import {
   Avatar,
@@ -16,17 +16,21 @@ import { type Message, useChat } from "@ai-sdk/react";
 import type { VideoWithRelations } from "../actions/video-db";
 import type { NewVideo } from "@/app/(public)/video/[videoId]/components/video-content";
 import { generateId } from "ai";
+import { cn } from "@/shared/lib/utils";
+import type { User } from "@/prisma/generated";
 
 interface VideoChatProps {
   video: (VideoWithRelations | NewVideo) | null;
   chatId?: string | null;
   initialMessages?: Message[];
+  currentUser: User;
 }
 
 export function VideoChat({
   video,
   chatId,
   initialMessages = [],
+  currentUser,
 }: VideoChatProps) {
   const { title: videoTitle, timeline, id: videoId } = video || {};
 
@@ -50,53 +54,73 @@ export function VideoChat({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Memoizar el scroll al final de los mensajes
+  const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages.length]);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length, scrollToBottom]);
+
+  // Get initials from first and last name separated by space
+  const getInitials = useCallback((name: string) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  }, []);
+
+  // Memoizar la lista de mensajes para evitar renderizados innecesarios
+  const messageElements = useMemo(() => {
+    return messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex ${
+          message.role === "user" ? "justify-end" : "justify-start"
+        }`}
+      >
+        <div className="flex max-w-[80%] items-start gap-3">
+          {message.role === "assistant" && (
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>AI</AvatarFallback>
+              <AvatarImage src="/placeholder.svg?height=32&width=32" />
+            </Avatar>
+          )}
+          <Card
+            className={cn(
+              "max-w-sm p-3",
+              message.role === "user"
+                ? "bg-blue-500 text-white"
+                : "dark:bg-gray-800"
+            )}
+          >
+            <div className="prose space-y-2">
+              <MemoizedMarkdown id={message.id} content={message.content} />
+            </div>
+          </Card>
+          {message.role === "user" && (
+            <Avatar className="h-8 w-8 rounded-full">
+              <AvatarFallback>
+                {getInitials(currentUser.name || "")}
+              </AvatarFallback>
+
+              <AvatarImage src={currentUser.image || ""} />
+            </Avatar>
+          )}
+        </div>
+      </div>
+    ));
+  }, [messages]);
 
   return (
     <div className="flex h-[60vh] flex-col rounded-lg border">
       <ScrollArea className="flex-1 p-4">
         <div className="max-h-[200px] space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div className="flex max-w-[80%] items-start gap-3">
-                {message.role === "assistant" && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>AI</AvatarFallback>
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  </Avatar>
-                )}
-                <Card
-                  className={`p-3 ${
-                    message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-800"
-                  }`}
-                >
-                  <div className="prose space-y-2">
-                    <MemoizedMarkdown
-                      id={message.id}
-                      content={message.content}
-                    />
-                  </div>
-                </Card>
-                {message.role === "user" && (
-                  <Avatar className="h-8 w-8 rounded-full">
-                    <AvatarFallback>You</AvatarFallback>
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  </Avatar>
-                )}
-              </div>
-            </div>
-          ))}
+          {messageElements}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
